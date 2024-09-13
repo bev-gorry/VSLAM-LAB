@@ -73,7 +73,7 @@ def evo_get_accuracy(evaluation_folder):
 
     # Use EllipticEnvelope to fit the data
     num_traj_files = len(keyframe_traj_files)
-    if num_traj_files > 50:
+    if num_traj_files > 5000:
         outlier_detector = EllipticEnvelope(contamination=0.10)  # 5% contamination is typical
         outliers = outlier_detector.fit_predict(data_reshaped)
         outlier_indices = np.where(outliers == -1)[0]

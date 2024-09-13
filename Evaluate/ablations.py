@@ -27,26 +27,24 @@ def modify_yaml_parameter(yaml_file, section_name, parameter_name, new_value):
 
     print(f"YAML file '{yaml_file}' has been updated.")
 
-def glomap_parameter_ablation_start(it):
-    glomap_dir = os.path.join(VSLAM_LAB_BASELINES_DIR, 'glomap')
-    glomap_settings_yaml = os.path.join(glomap_dir, 'glomap_settings.yaml')
-    glomap_settings_saved_yaml = os.path.join(glomap_dir, 'glomap_settings_saved.yaml')
+def parameter_ablation_start(it, ablation_param, settings_yaml):
+    settings_saved_yaml = settings_yaml.replace('_settings', '_settings_original')
 
-    if os.path.exists(glomap_settings_saved_yaml):
-        shutil.copy(glomap_settings_saved_yaml, glomap_settings_yaml)
+    if os.path.exists(settings_saved_yaml):
+        shutil.copy(settings_saved_yaml, settings_yaml)
     else:
-        shutil.copy(glomap_settings_yaml, glomap_settings_saved_yaml)
+        shutil.copy(settings_yaml, settings_saved_yaml)
 
-    value = 0.1 + it * 5
-    modify_yaml_parameter(glomap_settings_yaml, 'BundleAdjustment', 'thres_loss_function', value)
+    value = 10 ** ((it/20) - 5)
+    print(f"ablation value = {value}")
 
-def glomap_parameter_ablation_finish():
-    glomap_dir = os.path.join(VSLAM_LAB_BASELINES_DIR, 'glomap')
-    glomap_settings_yaml = os.path.join(glomap_dir, 'glomap_settings.yaml')
-    glomap_settings_saved_yaml = os.path.join(glomap_dir, 'glomap_settings_saved.yaml')
+    section_name, parameter_name = ablation_param.split('.', 1)
+    modify_yaml_parameter(settings_yaml, section_name, parameter_name, value)
 
-    shutil.copy(glomap_settings_saved_yaml, glomap_settings_yaml)
-    os.remove(glomap_settings_saved_yaml)
+def parameter_ablation_finish(settings_yaml):
+    settings_saved_yaml = settings_yaml.replace('_settings', '_settings_original')
+    shutil.copy(settings_saved_yaml, settings_yaml)
+    os.remove(settings_saved_yaml)
 
 def add_noise_to_images_start(sequence_path, it, exp, fps):
     max_rgb = 50

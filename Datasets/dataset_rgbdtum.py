@@ -92,7 +92,7 @@ class RGBDTUM_dataset(DatasetVSLAMLab):
         if "freiburg3" in sequence_name:
             fx, fy, cx, cy, k1, k2, p1, p2, k3 = 535.4, 539.2, 320.1, 247.6, 0.0, 0.0, 0.0, 0.0, 0.0
 
-        self.write_calibration_yaml(fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name)
+        self.write_calibration_yaml('OPENCV', fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name)
 
     def create_groundtruth_txt(self, sequence_name):
         sequence_path = os.path.join(self.dataset_path, sequence_name)

@@ -12,26 +12,12 @@ git-clone-all-ssh = {cmd = "pixi run -e orbslam2 git-clone-ssh && pixi run -e ds
 build-all     = {cmd = "pixi run -e orbslam2 build && pixi run -e dso build && pixi run -e anyfeature build && pixi run -e colmap setup", depends-on = ["git-clone-all"]}
 build-all-ssh = {cmd = "pixi run -e orbslam2 build && pixi run -e dso build && pixi run -e anyfeature build && pixi run -e colmap setup", depends-on = ["git-clone-all-ssh"]}
 
-vslamlab = {cmd = "python vslamlab.py"}
-set-benchmark-path  = {cmd = "python utilities.py set_VSLAMLAB_BENCHMARK_path"}
-set-evaluation-path = {cmd = "python utilities.py set_VSLAMLAB_EVALUATION_path"}
-
-[dependencies]
-python="*"
-matplotlib="*"
-pandas="*"
-pyyaml="*"
-py-opencv="*"
-scipy="*"
-requests="*"
-inputimeout="*"
-scikit-learn="*"
-tqdm="*"
-google-api-python-client="*"
-google-auth-oauthlib="*"
-huggingface_hub="*"
+vslamlab = {cmd = "pixi run -e vslamlab python vslamlab.py"}
+set-benchmark-path  = {cmd = "pixi run -e vslamlab python utilities.py set_VSLAMLAB_BENCHMARK_path"}
+set-evaluation-path = {cmd = "pixi run -e vslamlab python utilities.py set_VSLAMLAB_EVALUATION_path"}
 
 [environments]
+vslamlab = ["vslamlab"]
 orbslam2 = ["orbslam2"]
 dso = ["dso"]
 anyfeature = ["anyfeature"]
@@ -42,7 +28,27 @@ colmap = ["colmap"]
 glomap = ["glomap"]
 evo = ["evo"]
 r2d2 = ["r2d2"]
-#monogs = ["monogs"]
+monogs = ["monogs"]
+
+# VSLAM-LAB
+[feature.vslamlab]
+channels = ["https://fast.prefix.dev/conda-forge"]
+platforms = ["linux-64"]
+
+[feature.vslamlab.dependencies]
+python="*"
+pyyaml="*"
+matplotlib="*"
+pandas="*"
+py-opencv="*"
+scipy="*"
+requests="*"
+inputimeout="*"
+scikit-learn="*"
+tqdm="*"
+google-api-python-client="*"
+google-auth-oauthlib="*"
+huggingface_hub="*"
 
 # EVO
 [feature.evo.dependencies]
@@ -57,10 +63,10 @@ platforms = ["linux-64"]
 
 [feature.evo.tasks]
 evo = "evo"
-evo_traj = "evo_traj"
-evo_ape = "evo_ape"
-evo_res = "evo_res"
 evo_config =  "evo_config set save_traj_in_zip true"
+evo_traj = {cmd = "evo_traj", depends-on = ["evo_config"]}
+evo_ape = {cmd = "evo_ape", depends-on = ["evo_config"]}
+evo_res = {cmd = "evo_res", depends-on = ["evo_config"]}
 
 # AnyFeature-VSLAM
 [feature.anyfeature]
@@ -236,7 +242,7 @@ setup = "python VSLAM-Baselines/extra-files/colmap/colmap_setup.py"
 build = {cmd = "./VSLAM-Baselines/colmap/build.sh", depends-on = ["git-clone", "setup"]}
 build-ssh = {cmd = "./VSLAM-Baselines/colmap/build.sh", depends-on = ["git-clone-ssh", "setup"]}
 
-execute = "./VSLAM-Baselines/colmap/colmap_reconstruction.sh"
+execute = {cmd = "./VSLAM-Baselines/colmap/colmap_reconstruction.sh", depends-on = ["build"]} 
 colmap = "./VSLAM-Baselines/colmap/bin/colmap"
 glomap = "./VSLAM-Baselines/glomap/bin/glomap"
 
@@ -292,25 +298,35 @@ lz4-c="*"
 metis="*"
 libcurand-dev="*"
 cuda-nvcc="*"
+python="*"
 yq="*"
+numpy="*"
+scipy="*"
+pyyaml="*"
+matplotlib="*"
 
 # GLOMAP
 [feature.glomap]
 channels = ["https://fast.prefix.dev/conda-forge"]
 platforms = ["linux-64"]
 
+[feature.glomap.dependencies]
+python="*"
+pyyaml="*"
+matplotlib="*"
+
 [feature.glomap.tasks]
 
 git-clone = "git-clone.sh alejandrofontan glomap VSLAM-Baselines"
 git-clone-ssh = "pixi run -e glomap git-clone --ssh"
 
-setup = "python VSLAM-Baselines/extra-files/glomap/glomap_setup.py"
-build = {cmd = "pixi run -e colmap ./VSLAM-Baselines/glomap/build.sh", depends-on = ["git-clone", "setup"]}
+setup = "python VSLAM-Baselines/glomap/glomap_setup.py"
+build = {cmd = "pixi run -e colmap ./VSLAM-Baselines/glomap/build.sh", depends-on = ["git-clone", "setup", "build-colmap"]}
 
 build-ssh = {cmd = "pixi run -e colmap  ./VSLAM-Baselines/glomap/build.sh", depends-on = ["git-clone-ssh", "setup", "build-colmap"]}
 build-colmap =  "pixi run -e colmap build -v"
 
-execute = "pixi run -e colmap ./VSLAM-Baselines/glomap/glomap_reconstruction.sh"
+execute = {cmd = "pixi run -e colmap ./VSLAM-Baselines/glomap/glomap_reconstruction.sh", depends-on = ["build"]}
 
 # ROS
 [feature.ros-env]
@@ -383,45 +399,46 @@ pytorch-gpu = "*"
 torchvision="*"
 
 # MonoGS
-#[feature.monogs]
-#channels = ["https://fast.prefix.dev/conda-forge", "nvidia", "pytorch", 'pypi']
-#platforms = ["linux-64"]
-#
-#[feature.monogs.system-requirements]
-#cuda = "12.4"
+[feature.monogs]
+channels = ["https://fast.prefix.dev/conda-forge", "nvidia", "pytorch"]
+platforms = ["linux-64"]
 
-#[feature.monogs.tasks]
-#git-clone = "git-clone.sh muskie82 MonoGS VSLAM-Baselines"
-#git-clone-ssh = "pixi run -e MonoGS git-clone --ssh"
-#
-#build = 'pip install VSLAM-Baselines/MonoGS/submodules/simple-knn VSLAM-Baselines/MonoGS/submodules/diff-gaussian-rasterization'
-#
-#execute = "python VSLAM-Baselines/MonoGS/slam.py --config VSLAM-Baselines/MonoGS/configs/mono/tum/fr3_office.yaml"
-#check_cuda = 'python -c "import torch; print(torch.cuda.is_available())"'
-#
-#[feature.monogs.dependencies]
-#
-#python = {version="3.8.19", build="hd12c33a_0_cpython", channel="https://fast.prefix.dev/conda-forge"}
-#pytorch = {version="2.4.0", build="py3.8_cuda12.4_cudnn9.1.0_0", channel="pytorch"}
-#pytorch-cuda = {version="12.4", build="hc786d27_6", channel="pytorch"}
-#torchvision = {version="0.19.0", build="py38_cu124", channel="pytorch"}
-#torchaudio = {version="2.4.0", build="py38_cu124", channel="pytorch"}
-#plyfile = {version="0.8.1", build="pyhd8ed1ab_0", channel="https://fast.prefix.dev/conda-forge"}
-#pip = "*"
-#cuda = "12.4"
-#
-#[feature.monogs.pypi-dependencies]
-#opencv-python="==4.8.1.78"
-#munch="*"
-#trimesh="*"
-#evo="==1.11.0"
-#wandb="*"
-#open3d="==0.17.0"
-#torchmetrics="*"
-#imgviz="*"
-#PyOpenGL="*"
-#glfw="*"
-#PyGLM="*"
-#lpips="*"
-#rich="*"
-#ruff="*"
+[feature.monogs.system-requirements]
+cuda = "12.4"
+
+[feature.monogs.tasks]
+git-clone = "git-clone.sh alejandrofontan MonoGS VSLAM-Baselines"
+git-clone-ssh = "pixi run -e MonoGS git-clone --ssh"
+
+build = {cmd = "pip install VSLAM-Baselines/MonoGS/submodules/simple-knn VSLAM-Baselines/MonoGS/submodules/diff-gaussian-rasterization", depends-on = ["git-clone"]}
+build-ssh = {cmd = "pip install VSLAM-Baselines/MonoGS/submodules/simple-knn VSLAM-Baselines/MonoGS/submodules/diff-gaussian-rasterization", depends-on = ["git-clone-ssh"]}
+
+execute = 'python VSLAM-Baselines/MonoGS/slam.py'
+check_cuda = 'python -c "import torch; print(torch.cuda.is_available())"'
+
+[feature.monogs.dependencies]
+
+python = {version="3.8.19", build="hd12c33a_0_cpython", channel="https://fast.prefix.dev/conda-forge"}
+pytorch = {version="2.4.0", build="py3.8_cuda12.4_cudnn9.1.0_0", channel="pytorch"}
+pytorch-cuda = {version="12.4", build="hc786d27_6", channel="pytorch"}
+torchvision = {version="0.19.0", build="py38_cu124", channel="pytorch"}
+torchaudio = {version="2.4.0", build="py38_cu124", channel="pytorch"}
+plyfile = {version="0.8.1", build="pyhd8ed1ab_0", channel="https://fast.prefix.dev/conda-forge"}
+pip = "*"
+cuda = "12.4"
+
+[feature.monogs.pypi-dependencies]
+opencv-python="==4.8.1.78"
+munch="*"
+trimesh="*"
+evo="==1.11.0"
+wandb="*"
+open3d="==0.17.0"
+torchmetrics="*"
+imgviz="*"
+PyOpenGL="*"
+glfw="*"
+PyGLM="*"
+lpips="*"
+rich="*"
+ruff="*"

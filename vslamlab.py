@@ -18,6 +18,7 @@ import shutil
 import re
 import yaml
 from inputimeout import inputimeout, TimeoutOccurred
+from tqdm import tqdm
 
 from Compare import compare_functions
 from Datasets.dataset_utilities import get_dataset
@@ -85,7 +86,7 @@ def main():
         download(config_files)
 
     if args.run:
-        run(experiments, args.ablation)
+        run(experiments, args.exp_yaml, args.ablation)
 
     if args.evaluate:
         evaluate(experiments)
@@ -187,13 +188,17 @@ def evaluate(experiments):
                     dataset.evaluate_sequence(sequence_name, exp.folder)
 
 
-def run(experiments, ablation=False):
-    print(f"\n{SCRIPT_LABEL}Running ...")
+def run(experiments, exp_yaml, ablation=False, ):
+    print(f"\n{SCRIPT_LABEL}Running experiments (in {exp_yaml}) ...")
     start_time = time.time()
-    for [exp_name, exp] in experiments.items():
-        with open(exp.config_yaml, 'r') as file:
-            config_file_data = yaml.safe_load(file)
-            for it in range(exp.num_runs):
+
+    while True:
+        experiments_ = {}
+        remaining_time = 0
+        for [exp_name, exp] in experiments.items():
+            remaining_iterations = 0
+            with open(exp.config_yaml, 'r') as file:
+                config_file_data = yaml.safe_load(file)
                 for dataset_name, sequence_names in config_file_data.items():
                     dataset = get_dataset(dataset_name, VSLAMLAB_BENCHMARK)
                     for sequence_name in sequence_names:
@@ -202,21 +207,32 @@ def run(experiments, ablation=False):
                         if os.path.exists(sequence_folder):
                             search_pattern = os.path.join(sequence_folder, f'*system_output_*')
                             num_system_output_files = len(glob.glob(search_pattern))
+
+                        remaining_iterations_seq = exp.num_runs - num_system_output_files
+                        remaining_iterations += remaining_iterations_seq
                         if num_system_output_files < exp.num_runs:
+                            exp_id = num_system_output_files
                             print(
                                 f"{ws(4)}Running (it: {num_system_output_files + 1}/{exp.num_runs}) '{exp.module}' "
                                 f"in: '{sequence_name}'...")
-                            dataset.run_sequence(exp, sequence_name, ablation)
+                            duration_time = dataset.run_sequence(exp, sequence_name, exp_id, ablation)
+                            remaining_time += (remaining_iterations_seq - 1) * duration_time
 
-        if num_system_output_files == exp.num_runs:
-            print(f"{ws(4)}Finished experiment '{exp_name}' with {num_system_output_files}/{exp.num_runs} iterations.")
-    end_time = time.time()
+            if remaining_iterations > 0:
+                experiments_[exp_name] = exp
 
-    run_time = (end_time - start_time) / 60.0
+        if len(experiments_) == 0:
+            break
+
+        experiments = experiments_
+        if remaining_time > 1:
+            print(f"\033[93m[Remaining time until completion: {remaining_time:.2f} seconds]\033[0m")
+
+    run_time = (time.time() - start_time) / 60.0
     if run_time > 60.0:
-        print(f"\n{SCRIPT_LABEL}Experiment runtime: {run_time / 60.0} (h)")
+         print(f"\033[93m[Experiment runtime: {run_time / 60.0} hours]\033[0m")
     else:
-        print(f"\n{SCRIPT_LABEL}Experiment runtime: {run_time} (min)")
+         print(f"\033[93m[Experiment runtime: {run_time} minutes]\033[0m")
 
 
 def download(config_files):

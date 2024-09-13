@@ -110,7 +110,7 @@ class ARIEL_dataset(DatasetVSLAMLab):
 
         fx, fy, cx, cy = new_K[0, 0], new_K[1, 1], new_K[0, 2], new_K[1, 2]
         k1, k2, p1, p2, k3 = 0.0, 0.0, 0.0, 0.0, 0.0
-        self.write_calibration_yaml(fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name)
+        self.write_calibration_yaml('OPENCV', fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name)
 
     def create_groundtruth_txt(self, sequence_name):
         sequence_path = os.path.join(self.dataset_path, sequence_name)

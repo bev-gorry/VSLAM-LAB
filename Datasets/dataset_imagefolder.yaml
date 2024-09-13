@@ -1,0 +1,8 @@
+dataset_name: imagefolder
+
+rgb_scale_factor: 0.1
+rgb_hz: 10.0
+url_download_root: "/path/to/image/folder"
+
+sequence_names:
+  - subfolder_1
