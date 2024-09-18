@@ -3,8 +3,9 @@ import cv2
 import shutil
 import numpy as np
 import yaml
+import inspect
 
-from utilities import VSLAM_LAB_BASELINES_DIR
+from utilities import VSLAMLAB_BASELINES
 from utilities import RGB_BASE_FOLDER
 from snippets.downsample_rgb_frames import downsample_rgb_frames
 
@@ -17,15 +18,15 @@ def modify_yaml_parameter(yaml_file, section_name, parameter_name, new_value):
 
     if section_name in data and parameter_name in data[section_name]:
         data[section_name][parameter_name] = new_value
-        print(f"Parameter '{parameter_name}' in section '{section_name}' updated to '{new_value}'.")
+        print(f"    Parameter '{parameter_name}' in section '{section_name}' updated to '{new_value}'.")
     else:
-        print(f"Parameter '{parameter_name}' or section '{section_name}' not found in the YAML file.")
+        print(f"    Parameter '{parameter_name}' or section '{section_name}' not found in the YAML file.")
 
     # Write the changes back to the YAML file
     with open(yaml_file, 'w') as file:
         yaml.safe_dump(data, file)
 
-    print(f"YAML file '{yaml_file}' has been updated.")
+    print(f"    YAML file '{yaml_file}' has been updated.")
 
 def parameter_ablation_start(it, ablation_param, settings_yaml):
     settings_saved_yaml = settings_yaml.replace('_settings', '_settings_original')
@@ -35,11 +36,23 @@ def parameter_ablation_start(it, ablation_param, settings_yaml):
     else:
         shutil.copy(settings_yaml, settings_saved_yaml)
 
-    value = 10 ** ((it/20) - 5)
-    print(f"ablation value = {value}")
+    def parameter_ablation(it):
+        return 10 ** (int(it/5)/20 - 5)
+
+    source_code = inspect.getsource(parameter_ablation)
+    parameter_policy = source_code[source_code.find('return') + len('return'):].strip()
+
+    print(f"{SCRIPT_LABEL} Parameter policy: {ablation_param} = {parameter_policy}")
+    value = parameter_ablation(it)
+    print(f"    it = {it}")
+    print(f"    ablation value = {value}")
 
     section_name, parameter_name = ablation_param.split('.', 1)
     modify_yaml_parameter(settings_yaml, section_name, parameter_name, value)
+
+    ablation_parameters = {ablation_param: value}
+
+    return ablation_parameters
 
 def parameter_ablation_finish(settings_yaml):
     settings_saved_yaml = settings_yaml.replace('_settings', '_settings_original')
@@ -72,9 +85,14 @@ def add_noise_to_images_start(sequence_path, it, exp, fps):
         for timestamp, path in zip(downsampled_timestamps, downsampled_paths):
             file.write(f"{timestamp} {path}\n")
 
-    # Noise policy
-    std_noise = it * 1.0
-    print(f"{SCRIPT_LABEL} Noise policy: std_noise = 50 + it * 1.0")
+    def std_noise_ablation(it):
+        return (it % 5) * 5
+
+    source_code = inspect.getsource(std_noise_ablation)
+    noise_policy = source_code[source_code.find('return') + len('return'):].strip()
+
+    std_noise = std_noise_ablation(it)
+    print(f"{SCRIPT_LABEL} Noise policy: std_noise = {noise_policy}")
     print(f"    it = {it}")
     print(f"    std_noise = {std_noise}")
 
@@ -90,6 +108,9 @@ def add_noise_to_images_start(sequence_path, it, exp, fps):
         image = cv2.imread(rgb_file_saved)
         noisy_image = add_gaussian_noise(image, mean=0, std_dev=std_noise)
         cv2.imwrite(os.path.join(sequence_path, rgb_file), noisy_image)
+
+    ablation_parameters = {"std_noise": std_noise}
+    return ablation_parameters
 
 def add_noise_to_images_finish(sequence_path):
 

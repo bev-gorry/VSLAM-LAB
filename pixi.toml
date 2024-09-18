@@ -7,14 +7,14 @@ platforms = ["linux-64"]
 
 [tasks]
 git-clone-all     = {cmd = "pixi run -e orbslam2 git-clone && pixi run -e dso git-clone && pixi run -e anyfeature git-clone && pixi run -e dust3r git-clone "}
-git-clone-all-ssh = {cmd = "pixi run -e orbslam2 git-clone-ssh && pixi run -e dso git-clone-ssh && pixi run -e anyfeature git-clone-ssh && pixi run -e dust3r git-clone-ssh"}
-
 build-all     = {cmd = "pixi run -e orbslam2 build && pixi run -e dso build && pixi run -e anyfeature build && pixi run -e colmap setup", depends-on = ["git-clone-all"]}
-build-all-ssh = {cmd = "pixi run -e orbslam2 build && pixi run -e dso build && pixi run -e anyfeature build && pixi run -e colmap setup", depends-on = ["git-clone-all-ssh"]}
 
 vslamlab = {cmd = "pixi run -e vslamlab python vslamlab.py"}
 set-benchmark-path  = {cmd = "pixi run -e vslamlab python utilities.py set_VSLAMLAB_BENCHMARK_path"}
 set-evaluation-path = {cmd = "pixi run -e vslamlab python utilities.py set_VSLAMLAB_EVALUATION_path"}
+demo = {cmd = "pixi run -e vslamlab python demo.py"}
+
+add_dataset_from_image_folders = {cmd = "pixi run -e vslamlab python Datasets/extraFiles/add_dataset_from_image_folders.py"}
 
 [environments]
 vslamlab = ["vslamlab"]
@@ -29,6 +29,7 @@ glomap = ["glomap"]
 evo = ["evo"]
 r2d2 = ["r2d2"]
 monogs = ["monogs"]
+kalibr = ["kalibr"]
 
 # VSLAM-LAB
 [feature.vslamlab]
@@ -74,13 +75,9 @@ channels = ["fontan", "https://fast.prefix.dev/conda-forge", "huggingface"]
 platforms = ["linux-64"]
 
 [feature.anyfeature.tasks]
-git-clone = "git-clone.sh alejandrofontan AnyFeature-VSLAM VSLAM-Baselines"
-git-clone-ssh = "pixi run -e anyfeature git-clone --ssh"
-
-build = {cmd = "./VSLAM-Baselines/AnyFeature-VSLAM/build.sh", depends-on = ["git-clone"]}
-build-ssh = {cmd = "./VSLAM-Baselines/AnyFeature-VSLAM/build.sh", depends-on = ["git-clone-ssh"]}
-
-execute = "./VSLAM-Baselines/AnyFeature-VSLAM/bin/mono"
+git-clone = "git-clone.sh alejandrofontan AnyFeature-VSLAM Baselines"
+build = {cmd = "./Baselines/AnyFeature-VSLAM/build.sh", depends-on = ["git-clone"]}
+execute = {cmd = './Baselines/AnyFeature-VSLAM/bin/mono', depends-on = ["build"]}
 
 [feature.anyfeature.dependencies]
 cxx-compiler="*"
@@ -120,13 +117,9 @@ channels = ["https://fast.prefix.dev/conda-forge", "fontan"]
 platforms = ["linux-64"]
 
 [feature.orbslam2.tasks]
-git-clone = "git-clone.sh alejandrofontan ORB_SLAM2 VSLAM-Baselines"
-git-clone-ssh = "pixi run -e orbslam2 git-clone --ssh"
-
-build = {cmd = "./VSLAM-Baselines/ORB_SLAM2/build.sh", depends-on = ["git-clone"]}
-build-ssh = {cmd = "./VSLAM-Baselines/ORB_SLAM2/build.sh", depends-on = ["git-clone-ssh"]}
-
-execute = "./VSLAM-Baselines/ORB_SLAM2/bin/mono"
+git-clone = "git-clone.sh alejandrofontan ORB_SLAM2 Baselines"
+build = {cmd = "./Baselines/ORB_SLAM2/build.sh", depends-on = ["git-clone"]}
+execute = {cmd = "./Baselines/ORB_SLAM2/bin/mono", depends-on = ["build"]}
 
 [feature.orbslam2.dependencies]
 cxx-compiler="*"
@@ -160,13 +153,9 @@ channels = ["https://fast.prefix.dev/conda-forge", "fontan"]
 platforms = ["linux-64"]
 
 [feature.dso.tasks]
-git-clone = "git-clone.sh alejandrofontan dso VSLAM-Baselines"
-git-clone-ssh = "pixi run -e dso git-clone --ssh"
-
-build = {cmd = "./VSLAM-Baselines/dso/build.sh", depends-on = ["git-clone"]}
-build-ssh = {cmd = "./VSLAM-Baselines/dso/build.sh", depends-on = ["git-clone-ssh"]}
-
-execute = "./VSLAM-Baselines/dso/bin/mono"
+git-clone = "git-clone.sh alejandrofontan dso Baselines"
+build = {cmd = "./Baselines/dso/build.sh", depends-on = ["git-clone"]}
+execute = {cmd = './Baselines/dso/bin/mono', depends-on = ["build"]}
 
 [feature.dso.dependencies]
 cxx-compiler="*"
@@ -200,12 +189,9 @@ channels = ["https://fast.prefix.dev/conda-forge", "nvidia", "pytorch"]
 platforms = ["linux-64"]
 
 [feature.dust3r.tasks]
-git-clone = "git-clone.sh naver dust3r VSLAM-Baselines"
-git-clone-ssh = "pixi run -e dust3r git-clone --ssh"
-build = {cmd = "cp snippets/dust3r_execute.py  VSLAM-Baselines/dust3r && cp snippets/downsample_rgb_frames.py  VSLAM-Baselines/dust3r", depends-on = ["git-clone"]}
-build-ssh = {cmd = "cp snippets/dust3r_execute.py  VSLAM-Baselines/dust3r && cp snippets/downsample_rgb_frames.py  VSLAM-Baselines/dust3r", depends-on = ["git-clone-ssh"]}
-
-execute = "python VSLAM-Baselines/dust3r/dust3r_execute.py"
+git-clone = "git-clone.sh naver dust3r Baselines"
+build = {cmd = "cp snippets/dust3r_execute.py  Baselines/dust3r && cp snippets/downsample_rgb_frames.py  Baselines/dust3r", depends-on = ["git-clone"]}
+execute = {cmd = 'python Baselines/dust3r/dust3r_execute.py', depends-on = ["build"]}
 
 [feature.dust3r.dependencies]
 cmake="*"
@@ -234,17 +220,13 @@ platforms = ["linux-64"]
 
 [feature.colmap.tasks]
 
-git-clone = "git-clone.sh colmap colmap VSLAM-Baselines"
-git-clone-ssh = "pixi run -e colmap git-clone --ssh"
+git-clone = "git-clone.sh alejandrofontan colmap Baselines"
+setup = "python Baselines/colmap/colmap_setup.py"
+build = {cmd = "./Baselines/colmap/build.sh", depends-on = ["git-clone", "setup"]}
+execute = {cmd = './Baselines/colmap/colmap_reconstruction.sh', depends-on = ["build"]}
 
-setup = "python VSLAM-Baselines/extra-files/colmap/colmap_setup.py"
-
-build = {cmd = "./VSLAM-Baselines/colmap/build.sh", depends-on = ["git-clone", "setup"]}
-build-ssh = {cmd = "./VSLAM-Baselines/colmap/build.sh", depends-on = ["git-clone-ssh", "setup"]}
-
-execute = {cmd = "./VSLAM-Baselines/colmap/colmap_reconstruction.sh", depends-on = ["build"]} 
-colmap = "./VSLAM-Baselines/colmap/bin/colmap"
-glomap = "./VSLAM-Baselines/glomap/bin/glomap"
+colmap = "./Baselines/colmap/bin/colmap"
+glomap = "./Baselines/glomap/bin/glomap"
 
 [feature.colmap.dependencies]
 cxx-compiler="*"
@@ -316,17 +298,11 @@ pyyaml="*"
 matplotlib="*"
 
 [feature.glomap.tasks]
-
-git-clone = "git-clone.sh alejandrofontan glomap VSLAM-Baselines"
-git-clone-ssh = "pixi run -e glomap git-clone --ssh"
-
-setup = "python VSLAM-Baselines/glomap/glomap_setup.py"
-build = {cmd = "pixi run -e colmap ./VSLAM-Baselines/glomap/build.sh", depends-on = ["git-clone", "setup", "build-colmap"]}
-
-build-ssh = {cmd = "pixi run -e colmap  ./VSLAM-Baselines/glomap/build.sh", depends-on = ["git-clone-ssh", "setup", "build-colmap"]}
+git-clone = "git-clone.sh alejandrofontan glomap Baselines"
+setup = "python Baselines/glomap/glomap_setup.py"
 build-colmap =  "pixi run -e colmap build -v"
-
-execute = {cmd = "pixi run -e colmap ./VSLAM-Baselines/glomap/glomap_reconstruction.sh", depends-on = ["build"]}
+build = {cmd = "pixi run -e colmap ./Baselines/glomap/build.sh", depends-on = ["git-clone", "setup", "build-colmap"]}
+execute = {cmd = 'pixi run -e colmap ./Baselines/glomap/glomap_reconstruction.sh', depends-on = ["build"]}
 
 # ROS
 [feature.ros-env]
@@ -345,11 +321,9 @@ channels = ["https://fast.prefix.dev/conda-forge"]
 platforms = ["linux-64"]
 
 [feature.monodataset.tasks]
-git-clone = "git-clone.sh tum-vision mono_dataset_code VSLAM-Baselines"
-git-clone-ssh = "pixi run -e monodataset git-clone --ssh"
-build = {cmd = "./VSLAM-Baselines/mono_dataset_code/build.sh", depends-on = ["git-clone"]}
-build-ssh = {cmd = "./VSLAM-Baselines/mono_dataset_code/build.sh", depends-on = ["git-clone-ssh"]}
-undistort = {cmd = "./VSLAM-Baselines/mono_dataset_code/bin/playbackDataset"}
+git-clone = "git-clone.sh tum-vision mono_dataset_code Baselines"
+build = {cmd = "./Baselines/mono_dataset_code/build.sh", depends-on = ["git-clone"]}
+undistort = {cmd = "./Baselines/mono_dataset_code/bin/playbackDataset"}
 
 [feature.monodataset.dependencies]
 cxx-compiler="*"
@@ -382,10 +356,9 @@ channels = ["https://fast.prefix.dev/conda-forge", "pytorch"]
 platforms = ["linux-64"]
 
 [feature.r2d2.tasks]
-git-clone = "git-clone.sh naver r2d2 VSLAM-Baselines"
-git-clone-ssh = "pixi run -e r2d2 git-clone --ssh"
+git-clone = "git-clone.sh naver r2d2 Baselines"
+execute = "python Baselines/r2d2/extract.py --model Baselines/r2d2/models/r2d2_WASF_N16.pt --sequence_path /media/fontan/data/VSLAM-LAB-Benchmark/ETH/table_3 --top-k 2"
 
-execute = "python VSLAM-Baselines/r2d2/extract.py --model VSLAM-Baselines/r2d2/models/r2d2_WASF_N16.pt --sequence_path /media/fontan/data/VSLAM-LAB-Benchmark/ETH/table_3 --top-k 2"
 check_cuda = 'python -c "import torch; print(torch.cuda.is_available())"'
 
 [feature.r2d2.dependencies]
@@ -407,13 +380,10 @@ platforms = ["linux-64"]
 cuda = "12.4"
 
 [feature.monogs.tasks]
-git-clone = "git-clone.sh alejandrofontan MonoGS VSLAM-Baselines"
-git-clone-ssh = "pixi run -e MonoGS git-clone --ssh"
+git-clone = "git-clone.sh alejandrofontan MonoGS Baselines"
+build = {cmd = "pip install Baselines/MonoGS/submodules/simple-knn Baselines/MonoGS/submodules/diff-gaussian-rasterization", depends-on = ["git-clone"]}
+execute = {cmd = 'python Baselines/MonoGS/slam.py', depends-on = ["build"]}
 
-build = {cmd = "pip install VSLAM-Baselines/MonoGS/submodules/simple-knn VSLAM-Baselines/MonoGS/submodules/diff-gaussian-rasterization", depends-on = ["git-clone"]}
-build-ssh = {cmd = "pip install VSLAM-Baselines/MonoGS/submodules/simple-knn VSLAM-Baselines/MonoGS/submodules/diff-gaussian-rasterization", depends-on = ["git-clone-ssh"]}
-
-execute = 'python VSLAM-Baselines/MonoGS/slam.py'
 check_cuda = 'python -c "import torch; print(torch.cuda.is_available())"'
 
 [feature.monogs.dependencies]
@@ -442,3 +412,41 @@ PyGLM="*"
 lpips="*"
 rich="*"
 ruff="*"
+
+# Kalibr
+[feature.kalibr]
+channels = ["https://fast.prefix.dev/conda-forge", "esrf-bcu", "robostack-staging"]
+platforms = ["linux-64"]
+
+[feature.kalibr.tasks]
+git-clone = "git-clone.sh alejandrofontan kalibr Baselines/kalibr_catkin/src && cd Baselines/kalibr_catkin/src && catkin init"
+build = {cmd = "cd Baselines/kalibr_catkin && catkin build -DCMAKE_BUILD_TYPE=Release -j8", depends-on = ["git-clone"]}
+kalibr_bagcreater = {cmd = "./Baselines/kalibr_catkin/src/kalibr/calibrate.sh"}
+
+[feature.kalibr.dependencies]
+python = {version="3.9.18", build="h0755675_0_cpython", channel="https://fast.prefix.dev/conda-forge"}
+ros-noetic-desktop="*"
+compilers="*"
+cmake="*"
+pkg-config="*"
+make="*"
+ninja="*"
+colcon-common-extensions="*"
+catkin_tools="*"
+rosdep="*"
+boost="*"
+suitesparse = {version="5.4.0", build="h717dc36_0", channel="https://fast.prefix.dev/conda-forge"}
+tbb="*"
+opencv="*"
+libv4l="*"
+pip="*"
+scipy="*"
+matplotlib="*"
+ipython="*"
+wxpython ="*"
+tk ="*"
+pyx="*"
+libtiff="*"
+
+[feature.kalibr.pypi-dependencies]
+igraph="*"

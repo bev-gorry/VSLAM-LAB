@@ -13,24 +13,12 @@ Specifically downloading sequences, running experiments, and evaluating results.
 
 """
 
-import csv
-import glob
 import os
-import shutil
-import subprocess
 import sys
 from tqdm import tqdm
-import re
-import zipfile
-import time
 
 import cv2
-import pandas as pd
 import yaml
-import numpy as np
-import io
-import scipy.stats as stats
-from sklearn.covariance import EllipticEnvelope
 
 from utilities import VSLAM_LAB_DIR
 from utilities import find_files_with_string
@@ -38,9 +26,6 @@ from utilities import ws
 from utilities import check_sequence_integrity
 from Evaluate.evo import evo_ape_zip
 from Evaluate.evo import evo_get_accuracy
-from Datasets.utilities import log_run_sequence_time
-
-from Evaluate import ablations
 
 SCRIPT_LABEL = f"[{os.path.basename(__file__)}] "
 
@@ -51,6 +36,8 @@ class DatasetVSLAMLab:
 
         # Init dataset paths
         self.dataset_name = dataset_name
+        self.dataset_color = "\033[38;2;255;165;0m"
+        self.dataset_label = f"{self.dataset_color}{dataset_name}\033[0m"
         self.dataset_folder = dataset_name.upper()
         self.benchmark_path = benchmark_path
         self.dataset_path = os.path.join(self.benchmark_path, self.dataset_folder)
@@ -119,7 +106,7 @@ class DatasetVSLAMLab:
     def solve_download_issue(self, download_issue):
         return
 
-    def write_calibration_yaml(self, camera_model,  fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name):
+    def write_calibration_yaml(self, camera_model, fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name):
 
         sequence_path = os.path.join(self.dataset_path, sequence_name)
         calibration_yaml = os.path.join(sequence_path, 'calibration.yaml')
@@ -166,69 +153,6 @@ class DatasetVSLAMLab:
             else:
                 return "corrupted"
         return "non-available"
-
-    ####################################################################################################################
-    # Run methods
-
-    def run_sequence(self, exp, sequence_name_, exp_id, ablation=False):
-        run_time_start = time.time()
-
-        sequence_name = sequence_name_
-        sequence_path = os.path.join(self.dataset_path, sequence_name)
-
-        exp_folder = os.path.join(exp.folder, self.dataset_folder, sequence_name)
-        if not os.path.exists(exp_folder):
-            os.makedirs(exp_folder, exist_ok=True)
-
-        log_file_path = os.path.join(exp_folder, "system_output_" + str(exp_id).zfill(5) + ".txt")
-
-        exec_command = [f"sequence_path:{sequence_path}", f"exp_folder:{exp_folder}", f"exp_id:{exp_id}"]
-        i_par = 0
-        for parameter in exp.parameters:
-            exec_command += [str(parameter)]
-            i_par += 1
-
-        command_str = ' '.join(exec_command)
-
-        full_command = f"pixi run -e {exp.module} execute " + command_str
-
-        if ablation:
-            settings_yaml = self.prepare_ablation(sequence_name, exp, exp_id)
-        self.run_executable(full_command, log_file_path)
-        if ablation:
-            self.finish_ablation(sequence_name, settings_yaml)
-
-        duration_time = time.time() - run_time_start
-        log_run_sequence_time(exp_folder, exp_id, duration_time)
-        return duration_time
-
-    def run_executable(self, command, log_file_path):
-        with open(log_file_path, 'w') as log_file:
-            print(f"{ws(6)} log file: {log_file_path}")
-            subprocess.run(command, stdout=log_file, stderr=log_file, shell=True)
-
-    ####################################################################################################################
-
-    # Ablation methods
-    def prepare_ablation(self, sequence_name, exp, it):
-        print(f"{ws(8)}Sequence '{sequence_name}' preparing ablation ...")
-        for parameter in exp.parameters:
-            if 'settings_yaml' in parameter:
-                settings_yaml = parameter.replace('settings_yaml:', '')
-            if 'ablation_param' in parameter:
-                ablation_param = parameter.replace('ablation_param:', '')
-
-        #sequence_path = os.path.join(self.dataset_path, sequence_name)
-        #ablations.add_noise_to_images_start(sequence_path, it, exp, self.rgb_hz)
-        ablations.parameter_ablation_start(it, ablation_param, settings_yaml)
-
-        return settings_yaml
-
-    def finish_ablation(self, sequence_name, settings_yaml):
-        print(f"{ws(8)}Sequence '{sequence_name}' finishing ablation ...")
-        #sequence_path = os.path.join(self.dataset_path, sequence_name)
-        #ablations.add_noise_to_images_finish(sequence_path)
-        ablations.parameter_ablation_finish(settings_yaml)
 
     ####################################################################################################################
     # Evaluation methods

@@ -10,13 +10,17 @@ Compare/__pycache__/
 # pixi environments
 .pixi
 
-# VSLAM-Baselines
-VSLAM-Baselines/AnyFeature-VSLAM
-VSLAM-Baselines/dso
-VSLAM-Baselines/dust3r
-VSLAM-Baselines/mono_dataset_code
-VSLAM-Baselines/ORB_SLAM2
-VSLAM-Baselines/colmap
-VSLAM-Baselines/glomap
-VSLAM-Baselines/r2d2
-VSLAM-Baselines/MonoGS
+# Baselines
+Baselines/AnyFeature-VSLAM
+Baselines/dso
+Baselines/dust3r
+Baselines/mono_dataset_code
+Baselines/ORB_SLAM2
+Baselines/colmap
+Baselines/glomap
+Baselines/r2d2
+Baselines/MonoGS
+Baselines/kalibr_catkin
+
+configs/exp_demo.yaml
+configs/config_demo.yaml

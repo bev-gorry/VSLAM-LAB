@@ -18,20 +18,19 @@ import shutil
 import re
 import yaml
 from inputimeout import inputimeout, TimeoutOccurred
-from tqdm import tqdm
 
-from Compare import compare_functions
+from Evaluate import compare_functions
 from Datasets.dataset_utilities import get_dataset
-from utilities import COMPARISONS_YAML_DEFAULT
-from utilities import CONFIG_DEFAULT
-from utilities import EXP_YAML_DEFAULT
+from Baselines.baseline_utilities import get_baseline
+
+from utilities import COMPARISONS_YAML_DEFAULT, CONFIG_DEFAULT, EXP_YAML_DEFAULT
 from utilities import Experiment
-from utilities import VSLAMLAB_BENCHMARK
-from utilities import VSLAMLAB_EVALUATION
-from utilities import VSLAM_LAB_DIR
+from utilities import VSLAMLAB_BENCHMARK, VSLAMLAB_EVALUATION, VSLAM_LAB_DIR, VSLAMLAB_BASELINES
 from utilities import check_yaml_file_integrity
 from utilities import list_datasets
 from utilities import ws
+
+from Run.run_functions import run_sequence
 
 SCRIPT_LABEL = f"\033[95m[{os.path.basename(__file__)}]\033[0m "
 
@@ -197,6 +196,7 @@ def run(experiments, exp_yaml, ablation=False, ):
         remaining_time = 0
         for [exp_name, exp] in experiments.items():
             remaining_iterations = 0
+            baseline = get_baseline(exp.module, VSLAMLAB_BASELINES)
             with open(exp.config_yaml, 'r') as file:
                 config_file_data = yaml.safe_load(file)
                 for dataset_name, sequence_names in config_file_data.items():
@@ -211,11 +211,8 @@ def run(experiments, exp_yaml, ablation=False, ):
                         remaining_iterations_seq = exp.num_runs - num_system_output_files
                         remaining_iterations += remaining_iterations_seq
                         if num_system_output_files < exp.num_runs:
-                            exp_id = num_system_output_files
-                            print(
-                                f"{ws(4)}Running (it: {num_system_output_files + 1}/{exp.num_runs}) '{exp.module}' "
-                                f"in: '{sequence_name}'...")
-                            duration_time = dataset.run_sequence(exp, sequence_name, exp_id, ablation)
+                            exp_it = num_system_output_files
+                            duration_time = run_sequence(exp, baseline, exp_it, dataset, sequence_name, ablation)
                             remaining_time += (remaining_iterations_seq - 1) * duration_time
 
             if remaining_iterations > 0:

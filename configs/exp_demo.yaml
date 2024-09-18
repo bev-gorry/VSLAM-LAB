@@ -7,13 +7,13 @@ exp_demo_dso:
 exp_demo_orbslam2:
   Config: config_demo.yaml
   NumRuns: 81
-  Parameters: {Visualization: Vis:1, Vocabulary_folder: Voc:VSLAM-LAB/VSLAM-Baselines/ORB_SLAM2/Vocabulary}
+  Parameters: {Visualization: Vis:1, Vocabulary_folder: Voc:VSLAM-LAB/Baselines/ORB_SLAM2/Vocabulary}
   Module: orbslam2
 
 #exp_demo_anyfeature:
 #  Config: config_demo.yaml
 #  NumRuns: 0
-#  Parameters: {Visualization: Vis:1, Feature: Feat:brisk48, AnyFeature Path: anyfeat:VSLAM-LAB/VSLAM-Baselines/AnyFeature-VSLAM}
+#  Parameters: {Visualization: Vis:1, Feature: Feat:brisk48, AnyFeature Path: anyfeat:VSLAM-LAB/Baselines/AnyFeature-VSLAM}
 #  Module: anyfeature
 
 #exp_demo_colmap:
@@ -27,7 +27,7 @@ exp_demo_orbslam2:
 #  Config: config_demo.yaml
 #  NumRuns: 1
 #  Parameters: {Verbose: verbose:0, matcher_type: matcher_type:sequential, use_gpu: use_gpu:1, max_rgb: max_rgb:50,
-#               settings_yaml: settings_yaml:VSLAM-Baselines/glomap/glomap_settings.yaml,
+#               settings_yaml: settings_yaml:Baselines/glomap/glomap_settings.yaml,
 #               ablation_param: ablation_param:Thresholds.max_reprojection_error}
 #  Module: glomap
 
@@ -40,5 +40,5 @@ exp_demo_orbslam2:
 #exp_demo_monogs:
 #  Config: config_demo.yaml
 #  NumRuns: 1
-#  Parameters: {config: config:VSLAM-Baselines/MonoGS/configs/mono/vslamlab/vslamlab.yaml, verbose: verbose:1}
+#  Parameters: {config: config:Baselines/MonoGS/configs/mono/vslamlab/vslamlab.yaml, verbose: verbose:1}
 #  Module: monogs

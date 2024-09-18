@@ -4,12 +4,6 @@ import shutil
 import subprocess
 
 from Datasets.DatasetVSLAMLab import DatasetVSLAMLab
-from utilities import downloadFile
-from utilities import decompressFile
-from utilities import VSLAM_LAB_BASELINES_DIR
-
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
 from PIL import Image
 
 
@@ -23,16 +17,16 @@ class IMAGEFOLDER_dataset(DatasetVSLAMLab):
             data = yaml.safe_load(file)
 
         # Get download url
-        self.url_download_root = data['url_download_root']
+        self.dataset_folder_raw = data['dataset_folder_raw']
         self.fps = data['rgb_hz']
-        self.rgb_scale_factor = data['rgb_scale_factor']
+        self.resolution_scale = data['resolution_scale']
 
         # Create sequence_nicknames
         self.sequence_nicknames = [s.replace('_', ' ') for s in self.sequence_names]
 
     def download_sequence_data(self, sequence_name):
         # Variables
-        sequence_path_0 = os.path.join(self.url_download_root, sequence_name)
+        sequence_path_0 = os.path.join(self.dataset_folder_raw, sequence_name)
         sequence_path = os.path.join(self.dataset_path, sequence_name)
         rgb_path = os.path.join(sequence_path, 'rgb')
 
@@ -46,9 +40,8 @@ class IMAGEFOLDER_dataset(DatasetVSLAMLab):
         for file in os.listdir(sequence_path_0):
             if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')):
                 with Image.open(os.path.join(sequence_path_0, file)) as img:
-                    scaled_width = int(img.size[0] * self.rgb_scale_factor)
-                    scaled_height = int(img.size[1] * self.rgb_scale_factor)
-                    
+                    scaled_width = int(img.size[0] * self.resolution_scale)
+
                     # Ensure new_width is even
                     if scaled_width % 2 != 0:
                         scaled_width -= 1

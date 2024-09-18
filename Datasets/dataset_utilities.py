@@ -12,7 +12,6 @@ from Datasets.dataset_drunkards import DRUNKARDS_dataset
 from Datasets.dataset_replica import REPLICA_dataset
 from Datasets.dataset_hamlyn import HAMLYN_dataset
 from Datasets.dataset_caves import CAVES_dataset
-from Datasets.dataset_imagefolder import IMAGEFOLDER_dataset
 
 SCRIPT_LABEL = "[dataset_utilities.py] "
 
@@ -34,7 +33,6 @@ def get_dataset(dataset_name, benchmark_path):
         "7scenes": lambda: SEVENSCENES_dataset(benchmark_path),
         "tartanair": lambda: TARTANAIR_dataset(benchmark_path),
         "caves": lambda: CAVES_dataset(benchmark_path),
-        "imagefolder": lambda: IMAGEFOLDER_dataset(benchmark_path),
     }
 
     return switcher.get(dataset_name, lambda: "Invalid case")()

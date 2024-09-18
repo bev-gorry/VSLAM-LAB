@@ -132,7 +132,7 @@ class MONOTUM_dataset(DatasetVSLAMLab):
     def get_mono_dataset_code(self):
 
         # Clone and compile "https://github.com/tum-vision/mono_dataset_code.git"
-        self.mono_dataset_code_directory = os.path.join(VSLAM_LAB_DIR, 'VSLAM-Baselines', 'mono_dataset_code')
+        self.mono_dataset_code_directory = os.path.join(VSLAM_LAB_DIR, 'Baselines', 'mono_dataset_code')
 
         if not os.path.exists(os.path.join(self.mono_dataset_code_directory, 'bin', 'playbackDataset')):
 

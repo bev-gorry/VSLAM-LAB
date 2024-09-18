@@ -4,7 +4,7 @@ Path to sequence = /home/fontan/VSLAM-LAB-Benchmark/RGBDTUM/rgbd_dataset_freibur
 Path to output = /home/fontan/VSLAM-LAB-Evaluation/exp_demo_orbslam2/RGBDTUM/rgbd_dataset_freiburg1_xyz
 Exp id = 21
 Activate Visualization = 1
-Path to vocabulary = /home/fontan/VSLAM-LAB/VSLAM-Baselines/ORB_SLAM2/Vocabulary/ORBvoc.txt
+Path to vocabulary = /home/fontan/VSLAM-LAB/Baselines/ORB_SLAM2/Vocabulary/ORBvoc.txt
 
 ORB-SLAM2 Copyright (C) 2014-2016 Raul Mur-Artal, University of Zaragoza.
 This program comes with ABSOLUTELY NO WARRANTY;
