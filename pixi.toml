@@ -14,6 +14,8 @@ set-benchmark-path  = {cmd = "pixi run -e vslamlab python utilities.py set_VSLAM
 set-evaluation-path = {cmd = "pixi run -e vslamlab python utilities.py set_VSLAMLAB_EVALUATION_path"}
 demo = {cmd = "pixi run -e vslamlab python demo.py"}
 
+get-benchmark-path = {cmd = "VSLAMLAB_BENCHMARK=$(python3 -c 'from utilities import VSLAMLAB_BENCHMARK; print(VSLAMLAB_BENCHMARK)')"}
+
 add_dataset_from_image_folders = {cmd = "pixi run -e vslamlab python Datasets/extraFiles/add_dataset_from_image_folders.py"}
 
 [environments]

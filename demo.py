@@ -19,6 +19,7 @@ from utilities import VSLAMLAB_BENCHMARK
 from utilities import Experiment
 from utilities import VSLAMLAB_EVALUATION
 from utilities import VSLAMLAB_BASELINES
+from Run.run_functions import run_sequence
 
 SCRIPT_LABEL = f"\033[95m[{os.path.basename(__file__)}]\033[0m "
 
@@ -40,8 +41,8 @@ def main():
     dataset = get_dataset(dataset_name, VSLAMLAB_BENCHMARK)
     dataset.download_sequence(sequence_name)
     print(f"\n{SCRIPT_LABEL}Running {baseline.label} in {dataset_name}/{sequence_name} ...")
-    dataset.run_sequence(exp, sequence_name, 0)
 
+    run_sequence(exp, baseline, 0, dataset, sequence_name)
 
 if __name__ == "__main__":
     main()
