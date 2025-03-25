@@ -51,20 +51,6 @@ sequence_names:
   - rgbd_dataset_freiburg3_cabinet
   - rgbd_dataset_freiburg3_large_cabinet
   - rgbd_dataset_freiburg3_teddy
-  - rgbd_dataset_freiburg1_xyz_validation
-  - rgbd_dataset_freiburg1_rpy_validation
-  - rgbd_dataset_freiburg1_desk_validation
-  - rgbd_dataset_freiburg1_desk2_validation  
-  - rgbd_dataset_freiburg1_360_validation       
-  - rgbd_dataset_freiburg1_room_validation  
-  - rgbd_dataset_freiburg1_plant_validation 
-  - rgbd_dataset_freiburg2_xyz_validation 
-  - rgbd_dataset_freiburg2_rpy_validation 
-  - rgbd_dataset_freiburg2_360_hemisphere_validation
-  - rgbd_dataset_freiburg2_360_kidnap_validation
-  - rgbd_dataset_freiburg2_desk_validation
-  - rgbd_dataset_freiburg2_desk_with_person_validation
-  - rgbd_dataset_freiburg2_pioneer_360_validation
   - rgbd_dataset_freiburg3_cabinet_validation
   - rgbd_dataset_freiburg3_large_cabinet_validation
   - rgbd_dataset_freiburg3_long_office_household_validation
@@ -84,3 +70,18 @@ sequence_names:
   - rgbd_dataset_freiburg3_walking_xyz_validation
   - rgbd_dataset_freiburg3_walking_halfsphere_validation
   - rgbd_dataset_freiburg3_walking_rpy_validation    
+
+  # - rgbd_dataset_freiburg1_xyz_validation
+  # - rgbd_dataset_freiburg1_rpy_validation
+  # - rgbd_dataset_freiburg1_desk_validation
+  # - rgbd_dataset_freiburg1_desk2_validation  
+  # - rgbd_dataset_freiburg1_360_validation       
+  # - rgbd_dataset_freiburg1_room_validation  
+  # - rgbd_dataset_freiburg1_plant_validation 
+  # - rgbd_dataset_freiburg2_xyz_validation 
+  # - rgbd_dataset_freiburg2_rpy_validation 
+  # - rgbd_dataset_freiburg2_360_hemisphere_validation
+  # - rgbd_dataset_freiburg2_360_kidnap_validation
+  # - rgbd_dataset_freiburg2_desk_validation
+  # - rgbd_dataset_freiburg2_desk_with_person_validation
+  # - rgbd_dataset_freiburg2_pioneer_360_validation

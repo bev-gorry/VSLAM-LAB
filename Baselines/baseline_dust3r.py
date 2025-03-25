@@ -1,17 +1,24 @@
 import os.path
-
 from Baselines.BaselineVSLAMLab import BaselineVSLAMLab
 
-from utilities import VSLAMLAB_BASELINES
+
 class DUST3R_baseline(BaselineVSLAMLab):
-    def __init__(self, baselines_path):
+    def __init__(self):
         baseline_name = 'dust3r'
         baseline_folder = 'dust3r'
-        baseline_path = os.path.join(VSLAMLAB_BASELINES, baseline_folder)
-        default_parameters = ['-v']
+        default_parameters = {'verbose': 1, 'max_rgb': 10}
 
         # Initialize the baseline
-        super().__init__(baseline_name, baselines_path)
-        self.label = f"\033[96m{baseline_name}\033[0m"
-        self.baseline_path = baseline_path
-        self.default_parameters = default_parameters
+        super().__init__(baseline_name, baseline_folder, default_parameters)
+
+    def build_execute_command(self, exp_it, exp, dataset, sequence_name):
+        return super().build_execute_command_python(exp_it, exp, dataset, sequence_name)
+
+    def is_installed(self):
+        return os.path.isdir(self.baseline_path)
+
+    def info_print(self):
+        super().info_print()
+        print(f"Default executable: Baselines/extra-files/dust3r/dust3r_execute.py")
+
+

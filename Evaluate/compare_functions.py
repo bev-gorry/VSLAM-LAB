@@ -5,14 +5,12 @@ import pandas as pd
 import yaml
 
 from Evaluate import plot_functions
-from Evaluate.plot_functions import create_and_show_canvas
-from Datasets.dataset_utilities import get_dataset
-from utilities import VSLAM_LAB_EVALUATION_FOLDER
-from utilities import check_yaml_file_integrity
-from utilities import find_common_sequences
+from Datasets.get_dataset import get_dataset
+from path_constants import VSLAM_LAB_EVALUATION_FOLDER
+from utilities import check_yaml_file_integrity, find_common_sequences, read_csv
 
 SCRIPT_LABEL = "[compare_functions.py] "
-VSLAM_LAB_ACCURACY_CSV = 'accuracy.csv'
+VSLAM_LAB_ACCURACY_CSV = 'ate.csv'
 
 
 def full_comparison(experiments, VSLAMLAB_BENCHMARK, COMPARISONS_YAML_DEFAULT, comparison_path):
@@ -28,15 +26,19 @@ def full_comparison(experiments, VSLAMLAB_BENCHMARK, COMPARISONS_YAML_DEFAULT, c
     # Comparisons switch
     def switch_comparison(comparison_):
         switcher = {
-            'accuracy_boxplot': lambda: plot_functions.boxplot_exp_seq(accuracies, dataset_sequences, exp_names,
-                                                                       dataset_nicknames, 'accuracy', figures_path),
+            'accuracy_boxplot': lambda: plot_functions.boxplot_exp_seq(accuracies, dataset_sequences,
+                                                                       'rmse', figures_path, experiments),
+            'accuracy_boxplot_shared_scale': lambda: plot_functions.boxplot_exp_seq(accuracies, dataset_sequences,
+                                                                       'rmse', figures_path, experiments, shared_scale=True),
             'cumulated_error': lambda: plot_functions.plot_cum_error(accuracies, dataset_sequences, exp_names,
-                                                                     dataset_nicknames, 'accuracy', figures_path),
+                                                                     dataset_nicknames, 'rmse', figures_path, experiments),
             'accuracy_radar': lambda: plot_functions.radar_seq(accuracies, dataset_sequences, exp_names,
-                                                               dataset_nicknames, 'accuracy', figures_path),
+                                                               dataset_nicknames, 'rmse', figures_path, experiments),
             'trajectories': lambda: plot_functions.plot_trajectories(dataset_sequences, exp_names, dataset_nicknames,
                                                                      experiments, accuracies, figures_path),
-            'image_canvas': lambda: create_and_show_canvas(dataset_sequences, VSLAMLAB_BENCHMARK, figures_path)
+            'image_canvas': lambda: plot_functions.create_and_show_canvas(dataset_sequences, VSLAMLAB_BENCHMARK, figures_path),
+            'num_tracked_frames': lambda: plot_functions.num_tracked_frames(accuracies, dataset_sequences, figures_path, experiments)
+
         }
 
         func = switcher.get(comparison_, lambda: "Invalid case")
@@ -123,7 +125,6 @@ def get_accuracies(experiments, dataset_sequences):
             for exp_name, exp in experiments.items():
                 accuracy_csv_file = os.path.join(exp.folder, dataset_name.upper(), sequence_name,
                                                  os.path.join(VSLAM_LAB_EVALUATION_FOLDER, VSLAM_LAB_ACCURACY_CSV))
-                accuracy = pd.read_csv(accuracy_csv_file)
-                accuracies[dataset_name][sequence_name][exp_name] = accuracy
+                accuracies[dataset_name][sequence_name][exp_name] = read_csv(accuracy_csv_file)
 
     return accuracies

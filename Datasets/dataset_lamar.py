@@ -5,15 +5,16 @@ import shutil
 from Datasets.DatasetVSLAMLab import DatasetVSLAMLab
 from utilities import downloadFile
 from utilities import decompressFile
+from path_constants import VSLAMLAB_BENCHMARK
 
 from Evaluate.align_trajectories import align_trajectory_with_groundtruth
 from Evaluate import metrics
 
 
-class DATASET_NAME_TEMPLATE_dataset(DatasetVSLAMLab):
+class LAMAR_dataset(DatasetVSLAMLab):
     def __init__(self, benchmark_path):
         # Initialize the dataset
-        super().__init__('dataset_name_template', benchmark_path)
+        super().__init__('lamar', benchmark_path)
 
         # Load settings from .yaml file
         with open(self.yaml_file, 'r') as file:
@@ -26,7 +27,28 @@ class DATASET_NAME_TEMPLATE_dataset(DatasetVSLAMLab):
         self.sequence_nicknames = [s.replace('_', ' ') for s in self.sequence_names]
 
     def download_sequence_data(self, sequence_name):
-        return
+
+        # Variables
+        compressed_name = sequence_name
+        compressed_name_ext = compressed_name + '.zip'
+        decompressed_name = sequence_name
+        download_url = self.url_download_root
+
+        # Constants
+        compressed_file = os.path.join(self.dataset_path, compressed_name_ext)
+        decompressed_folder = os.path.join(self.dataset_path, decompressed_name)
+
+        # Download the compressed file
+        if not os.path.exists(compressed_file):
+            downloadFile(download_url, VSLAMLAB_BENCHMARK)
+
+        # Decompress the file
+        if os.path.exists(self.dataset_path):
+            if not os.listdir(self.dataset_path):
+                shutil.rmtree(self.dataset_path)
+
+        if not os.path.exists(decompressed_folder):
+            decompressFile(compressed_file, self.dataset_path)
 
     def create_rgb_folder(self, sequence_name):
         return

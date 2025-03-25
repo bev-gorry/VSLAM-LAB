@@ -23,7 +23,7 @@ class DRUNKARDS_dataset(DatasetVSLAMLab):
         self.url_download_root = data['url_download_root']
 
         # Create sequence_nicknames
-        self.sequence_nicknames = [s.replace('_', ' ') for s in self.sequence_names]
+        self.sequence_nicknames = [f"{self.dataset_name}_{s[:1]}" for s in self.sequence_names]
 
     def download_sequence_data(self, sequence_name):
         sequence_path = os.path.join(self.dataset_path, sequence_name)

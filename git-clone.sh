@@ -28,4 +28,5 @@ else
 fi
 
 git_url=$(get_git_url ${git_profile} ${git_repo} ${ssh})
-git clone --recurse-submodules ${git_url} ${vslamlab_baselines_folder}
+#git clone --recurse-submodules ${git_url} ${vslamlab_baselines_folder}
+git clone --recursive ${git_url} ${vslamlab_baselines_folder}

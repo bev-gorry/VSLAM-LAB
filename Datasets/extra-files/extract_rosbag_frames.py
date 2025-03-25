@@ -13,13 +13,13 @@ def main():
     parser.add_argument('output_folder', type=str, help=f"output folder")
     parser.add_argument('image_topic', type=str, help=f"image topic")
 
+
     args = parser.parse_args()
 
     bridge = CvBridge()
     rosbag_path = args.rosbag_path
     image_topic = args.image_topic
     output_folder = args.output_folder
-
     with rosbag.Bag(rosbag_path, 'r') as bag:
         for topic, msg, t in tqdm(bag.read_messages(topics=[image_topic])):
             try:

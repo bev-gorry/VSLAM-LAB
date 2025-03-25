@@ -1,14 +1,9 @@
-import os
-import yaml
+import os, yaml
 import shutil
+import csv
 
 from Datasets.DatasetVSLAMLab import DatasetVSLAMLab
-from utilities import downloadFile
-from utilities import decompressFile
-
-from Evaluate.align_trajectories import align_trajectory_with_groundtruth
-from Evaluate import metrics
-
+from utilities import downloadFile, decompressFile
 
 class NUIM_dataset(DatasetVSLAMLab):
     def __init__(self, benchmark_path):
@@ -27,11 +22,12 @@ class NUIM_dataset(DatasetVSLAMLab):
         self.sequence_nicknames = [s.replace('_', ' ') for s in self.sequence_nicknames]
 
     def download_sequence_data(self, sequence_name):
+        sequence_path = os.path.join(self.dataset_path, sequence_name)
 
         # Variables
-        compressed_name = sequence_name
-        compressed_name_ext = compressed_name + '.tar.gz'
+        compressed_name_ext = sequence_name + '.tar.gz'
         decompressed_name = sequence_name
+        
         download_url = os.path.join(self.url_download_root, compressed_name_ext)
 
         # Constants
@@ -43,14 +39,8 @@ class NUIM_dataset(DatasetVSLAMLab):
             downloadFile(download_url, self.dataset_path)
 
         # Decompress the file
-        if os.path.exists(decompressed_folder):
-            shutil.rmtree(decompressed_folder)
-        sequence_path = os.path.join(self.dataset_path, sequence_name)
-        decompressFile(compressed_file, sequence_path)
-
-        # Delete the compressed file
-        if os.path.exists(compressed_file):
-            os.remove(compressed_file)
+        if not os.path.exists(decompressed_folder):
+            decompressFile(compressed_file, sequence_path)
 
     def create_rgb_folder(self, sequence_name):
         sequence_path = os.path.join(self.dataset_path, sequence_name)
@@ -72,8 +62,8 @@ class NUIM_dataset(DatasetVSLAMLab):
         rgb_files = [f for f in os.listdir(rgb_path) if os.path.isfile(os.path.join(rgb_path, f))]
         rgb_files.sort()
         with open(rgb_txt, 'w') as file:
-            for iRGB, filename in enumerate(rgb_files, start=0):
-                name, ext = os.path.splitext(filename)
+            for filename in rgb_files:
+                name, _ = os.path.splitext(filename)
                 ts = float(name) / self.rgb_hz
                 file.write(f"{ts:.5f} rgb/{filename}\n")
 
@@ -82,20 +72,27 @@ class NUIM_dataset(DatasetVSLAMLab):
         fx, fy, cx, cy = 481.20, -480.00, 319.50, 239.50
         k1, k2, p1, p2, k3 = 0.0, 0.0, 0.0, 0.0, 0.0
 
-        self.write_calibration_yaml('OPENCV', fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name)
+        self.write_calibration_yaml('PINHOLE', fx, fy, cx, cy, k1, k2, p1, p2, k3, sequence_name)
 
     def create_groundtruth_txt(self, sequence_name):
         sequence_path = os.path.join(self.dataset_path, sequence_name)
         groundtruth_txt = os.path.join(sequence_path, 'groundtruth.txt')
+        groundtruth_csv = os.path.join(sequence_path, 'groundtruth.csv')
 
         freiburg_txt = [file for file in os.listdir(sequence_path) if 'freiburg' in file.lower()]
         with open(os.path.join(sequence_path, freiburg_txt[0]), 'r') as source_file:
-            with open(groundtruth_txt, 'w') as destination_file:
+            with open(groundtruth_txt, 'w') as destination_txt_file, \
+                open(groundtruth_csv, 'w', newline='') as destination_csv_file:
+
+                csv_writer = csv.writer(destination_csv_file)
+                header = ["ts", "tx", "ty", "tz", "qx", "qy", "qz", "qw"]
+                csv_writer.writerow(header)
                 for line in source_file:
                     values = line.strip().split()
                     values[0] = '{:.8f}'.format(float(values[0]) / self.rgb_hz)
-                    destination_file.write(" ".join(values) + "\n")
-        os.remove(os.path.join(sequence_path, freiburg_txt[0]))
+                    
+                    destination_txt_file.write(" ".join(values) + "\n")
+                    csv_writer.writerow(values)
 
     def remove_unused_files(self, sequence_name):
         sequence_path = os.path.join(self.dataset_path, sequence_name)

@@ -7,8 +7,8 @@ import yaml
 
 sys.path.append(os.getcwd())
 
-from utilities import VSLAM_LAB_DIR
-from utilities import VSLAMLAB_BENCHMARK
+from path_constants import VSLAM_LAB_DIR
+from path_constants import VSLAMLAB_BENCHMARK
 from utilities import check_sequence_integrity
 from utilities import ws
 
@@ -66,8 +66,8 @@ def main():
         exit(0)
 
     # Derive dataset class
-    dataset_imagefolder_py = os.path.join(VSLAM_LAB_DIR, 'Datasets', 'extraFiles', 'dataset_imagefolder.py')
-    dataset_imagefolder_yaml = os.path.join(VSLAM_LAB_DIR, 'Datasets', 'extraFiles', 'dataset_imagefolder.yaml')
+    dataset_imagefolder_py = os.path.join(VSLAM_LAB_DIR, 'Datasets', 'extra-files', 'dataset_imagefolder.py')
+    dataset_imagefolder_yaml = os.path.join(VSLAM_LAB_DIR, 'Datasets', 'extra-files', 'dataset_imagefolder.yaml')
     dataset_new_py = os.path.join(VSLAM_LAB_DIR, 'Datasets', f'dataset_{dataset_name}.py')
     dataset_new_yaml = os.path.join(VSLAM_LAB_DIR, 'Datasets', f'dataset_{dataset_name}.yaml')
 

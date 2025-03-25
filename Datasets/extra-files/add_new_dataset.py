@@ -5,8 +5,8 @@ import argparse
 
 sys.path.append(os.getcwd())
 
-from utilities import VSLAM_LAB_DIR
-from utilities import VSLAMLAB_BENCHMARK
+from path_constants import VSLAM_LAB_DIR
+from path_constants import VSLAMLAB_BENCHMARK
 from utilities import check_sequence_integrity
 from utilities import ws
 

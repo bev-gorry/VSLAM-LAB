@@ -4,3 +4,6 @@ drunkards:
   - '00000_1024_level0'
 replica:
   - 'office0'
+  - 'room0'
+nuim:
+  - 'living_room_traj0_frei_png'

@@ -9,6 +9,7 @@ Compare/__pycache__/
 
 # pixi environments
 .pixi
+pixi.lock
 
 # Baselines
 Baselines/AnyFeature-VSLAM
@@ -19,8 +20,22 @@ Baselines/ORB_SLAM2
 Baselines/colmap
 Baselines/glomap
 Baselines/r2d2
-Baselines/MonoGS
+Baselines/MonoGS_VSLAMLAB
 Baselines/kalibr_catkin
+Baselines/DROID-SLAM
+Baselines/Depth-Anything-V2
+Baselines/staticfusion
+Baselines/spann3r
+Baselines/ml-depth-pro
+Baselines/DroidCalib
+Baselines/DPVO
+Baselines/MASt3R-SLAM
+Baselines/*.txt*
 
 configs/exp_demo.yaml
 configs/config_demo.yaml
+
+path_constants.py
+
+#VSCode
+.vscode/

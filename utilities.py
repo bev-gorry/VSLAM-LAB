@@ -1,46 +1,29 @@
-import os
-import sys
-import tarfile
+import os, sys, yaml, re
 import urllib.request
 import zipfile
-
-import yaml
+import py7zr
+import tarfile
+import subprocess 
 from PIL import Image
+from colorama import Fore, Style
+import pandas as pd
 
-VSLAM_LAB_DIR = os.path.dirname(os.path.abspath(__file__))
-VSLAM_LAB_PATH = os.path.dirname(VSLAM_LAB_DIR)
+from path_constants import VSLAM_LAB_DIR, VSLAMLAB_VERBOSITY, VerbosityManager
 
-VSLAMLAB_BENCHMARK = os.path.join(VSLAM_LAB_PATH, 'VSLAM-LAB-Benchmark')
-VSLAMLAB_EVALUATION = os.path.join(VSLAM_LAB_PATH, 'VSLAM-LAB-Evaluation')
-VSLAMLAB_BASELINES = os.path.join(VSLAM_LAB_DIR, 'Baselines')
+SCRIPT_LABEL = f"\033[95m[{os.path.basename(__file__)}]\033[0m "
 
-COMPARISONS_YAML_DEFAULT = os.path.join(VSLAM_LAB_DIR, 'configs', 'comp_complete.yaml')
-EXP_YAML_DEFAULT = os.path.join(VSLAM_LAB_DIR, 'configs', 'exp_demo.yaml')
-CONFIG_DEFAULT = 'config_demo.yaml'
+def check_parameter_for_relative_path(parameter_value):
+    if "VSLAM-LAB" in parameter_value:
+        if ":" in parameter_value:
+            return re.sub(r'(?<=:)[^:]*VSLAM-LAB', VSLAM_LAB_DIR, str(parameter_value))
+        return re.sub(r'^.*VSLAM-LAB', VSLAM_LAB_DIR, str(parameter_value))
+    return parameter_value
 
-VSLAM_LAB_EVALUATION_FOLDER = 'vslamlab_evaluation'
-RGB_BASE_FOLDER = 'rgb'
-
-class Experiment:
-    def __init__(self):
-        self.config_yaml = ""
-        self.folder = ""
-        self.num_runs = 1
-        self.parameters = []
-        self.module = ""
-
-
-def list_datasets():
-    dataset_scripts_path = os.path.join(VSLAM_LAB_DIR, 'Datasets')
-    dataset_scripts = []
-    for filename in os.listdir(dataset_scripts_path):
-        if 'dataset_' in filename and filename.endswith('.yaml'):
-            dataset_scripts.append(filename)
-
-    dataset_scripts = [item.replace('dataset_', '').replace('.yaml', '') for item in dataset_scripts]
-
-    return dataset_scripts
-
+def filter_inputs(args):
+    if  not args.run and not args.evaluate and not args.compare:
+        args.run = True
+        args.evaluate = True
+        args.compare = True
 
 def ws(n):
     white_spaces = ""
@@ -137,7 +120,7 @@ def downloadFile(url, dest_dir_path):
 
 def decompressFile(filepath, extract_to=None):
     """
-    Decompress a .zip, .tar.gz, or .tar file and return the extraction directory.
+    Decompress a .zip, .tar.gz, .tar, or .7z file and return the extraction directory.
     """
     if not extract_to:
         extract_to = os.path.dirname(filepath)
@@ -153,9 +136,14 @@ def decompressFile(filepath, extract_to=None):
         mode = 'r:gz' if filepath.endswith('.gz') else 'r'
         with tarfile.open(filepath, mode) as tar_ref:
             tar_ref.extractall(extract_to)
+    elif filepath.endswith('.7z'):
+        with py7zr.SevenZipFile(filepath, mode='r') as z:
+            z.extractall(path=extract_to)
     else:
-        print("Unsupported file format. Please provide a .zip, .tar.gz, or .tar file.")
+        print("Unsupported file format. Please provide a .zip, .tar.gz, .tar, or .7z file.")
         return None
+
+    return extract_to
 
 
 def replace_string_in_files(directory, old_string, new_string):
@@ -185,19 +173,7 @@ def list_image_files_in_folder(folder_path):
         if os.path.isfile(file_path) and is_image_file(file_path):
             image_files.append(filename)
     return image_files
-    
-def set_VSLAMLAB_path(new_path, file_path, target_line_start):
-    new_line = f"{target_line_start} \"{new_path}\""
-    print(f"Set {new_path}")
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
 
-    with open(file_path, 'w') as file:
-        for line in lines:
-            if line.strip().startswith(target_line_start):
-                file.write(new_line + '\n')
-            else:
-                file.write(line)
 
 def check_sequence_integrity(dataset_path, sequence_name, verbose):
     sequence_path = os.path.join(dataset_path, sequence_name)
@@ -228,11 +204,147 @@ def check_sequence_integrity(dataset_path, sequence_name, verbose):
 
     return complete_sequence
 
+
+def deactivate_env(vslamlab_env):
+    file_path = os.path.join(VSLAM_LAB_DIR, 'pixi.toml')
+    with open(file_path, 'r') as file:
+        file_content = file.read()
+
+    # Split content by lines
+    lines = file_content.splitlines()
+
+    # Flags to track if we are within the baseline section
+    inside_baseline = False
+    inside_environments = False
+
+    # Iterate through lines and comment the baseline section
+    for i in range(len(lines)):
+        line = lines[i].strip()
+
+        if f"# {vslamlab_env} begin" == line:
+            inside_baseline = True
+            continue
+        elif f"# {vslamlab_env} end" == line:
+            inside_baseline = False
+            continue
+
+        if f"# environments begin" == line:
+            inside_environments = True
+            continue
+        elif f"# environments end" == line:
+            inside_environments = False
+            continue
+
+        # If inside the baseline block, comment the line
+        if inside_baseline:
+            if not ("#" in lines[i]):
+                lines[i] = "# " + lines[i]
+        if inside_environments:
+            if f'features = ["{vslamlab_env}"]' in lines[i]:
+                if not ("#" in lines[i]):
+                    lines[i] = "# " + lines[i]
+
+    new_file_content = "\n".join(lines)
+    with open(file_path, 'w') as file:
+        file.write(new_file_content)
+
+    subprocess.run("pixi clean && pixi update", shell=True)
+
+
+def activate_env(vslamlab_env):
+    file_path = os.path.join(VSLAM_LAB_DIR, 'pixi.toml')
+    with open(file_path, 'r') as file:
+        file_content = file.read()
+
+    # Split content by lines
+    lines = file_content.splitlines()
+
+    # Flags to track if we are within the baseline section
+    inside_baseline = False
+    inside_environments = False
+
+    # Iterate through lines and comment the baseline section
+    for i in range(len(lines)):
+        line = lines[i].strip()
+
+        if f"# {vslamlab_env} begin" == line:
+            inside_baseline = True
+            continue
+        elif f"# {vslamlab_env} end" == line:
+            inside_baseline = False
+            continue
+
+        if f"# environments begin" == line:
+            inside_environments = True
+            continue
+        elif f"# environments end" == line:
+            inside_environments = False
+            continue
+
+        # If inside the baseline block, comment the line
+        if inside_baseline:
+            lines[i] = lines[i].replace("# ", '')
+        if inside_environments:
+            if f'features = ["{vslamlab_env}"]' in lines[i]:
+                lines[i] = lines[i].replace("# ", '')
+
+    new_file_content = "\n".join(lines)
+    with open(file_path, 'w') as file:
+        file.write(new_file_content)
+
+    subprocess.run("pixi clean && pixi update", shell=True)
+
+
+def show_time(time_s):
+    if time_s < 60:
+        return f"{time_s:.2f} seconds"
+    if time_s < 3600:
+        return f"{(time_s / 60):.2f} minutes"
+    return f"{(time_s / 3600):.2f} hours"
+
+def format_msg(script_label, msg, flag="info"):
+    if flag == "info":
+        return f"{script_label}{msg}"
+    elif flag == "warning":
+        return f"{script_label}{Fore.YELLOW} {msg} {Style.RESET_ALL}"
+    elif flag == "error":
+        return f"{script_label}{Fore.RED} {msg} {Style.RESET_ALL}"
+
+def print_msg(script_label, msg, flag="info", verb='NONE'):
+    if VerbosityManager[verb] <= VerbosityManager[VSLAMLAB_VERBOSITY]:
+        print(format_msg(script_label, msg, flag))
+    
+def read_trajectory_txt(txt_file, delimiter=' ', header=None):
+    try:
+        trajectory = pd.read_csv(txt_file, delimiter=delimiter, header=header)
+        if trajectory.empty:
+            trajectory = None
+    except (pd.errors.EmptyDataError, FileNotFoundError):
+        trajectory = None
+    return trajectory
+
+def save_trajectory_txt(trajectory_txt, trajectory, header=None, index=False, sep=' ', lineterminator='\n'):
+    trajectory.to_csv(trajectory_txt, header=header, index=index, sep=sep, lineterminator=lineterminator)
+
+def read_csv(csv_file):
+    if not os.path.exists(csv_file):
+        return pd.DataFrame()
+    try:
+        csv_data = pd.read_csv(csv_file)
+        if csv_data.empty:
+            return pd.DataFrame()
+    except (pd.errors.EmptyDataError, FileNotFoundError):
+        return pd.DataFrame()
+    return csv_data
+
 if __name__ == "__main__":
 
     if len(sys.argv) > 2:
         function_name = sys.argv[1]
-        if function_name == 'set_VSLAMLAB_BENCHMARK_path':
-            set_VSLAMLAB_path(os.path.join(sys.argv[2], 'VSLAM-LAB-Benchmark'), __file__, "VSLAMLAB_BENCHMARK =")
-        if function_name == 'set_VSLAMLAB_EVALUATION_path':
-            set_VSLAMLAB_path(os.path.join(sys.argv[2], 'VSLAM-LAB-Evaluation'), __file__, "VSLAMLAB_EVALUATION =")    
+
+        if function_name == "deactivate_env":
+            deactivate_env(sys.argv[2])
+        if function_name == "activate_env":
+            activate_env(sys.argv[2])
+
+

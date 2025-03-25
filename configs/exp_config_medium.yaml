@@ -1,0 +1,25 @@
+exp_config_medium_droidslam:
+  Config: config_medium.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_idx: [0,999]}
+  Module: droidslam
+
+exp_config_medium_mast3rslam:
+  Config: config_medium.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_idx: [0,999]}
+  Module: mast3rslam
+
+
+
+# exp_config_medium_dpvo:
+#   Config: config_medium.yaml
+#   NumRuns: 3
+#   Parameters: {verbose: 0, rgb_idx: [0,1999]}
+#   Module: dpvo
+
+# exp_config_medium_orbslam2:
+#   Config: config_medium.yaml
+#   NumRuns: 3
+#   Parameters: {verbose: 0, rgb_idx: [0,1999]}
+#   Module: orbslam2

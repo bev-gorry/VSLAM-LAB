@@ -9,7 +9,7 @@ from utilities import downloadFile
 from utilities import decompressFile
 
 from utilities import replace_string_in_files
-from utilities import VSLAM_LAB_DIR
+from path_constants import VSLAM_LAB_DIR
 
 from Evaluate.align_trajectories import align_trajectory_with_groundtruth
 from Evaluate import metrics

@@ -1,18 +1,24 @@
 import os.path
-
 from Baselines.BaselineVSLAMLab import BaselineVSLAMLab
 
-from utilities import VSLAMLAB_BASELINES
+
 class GLOMAP_baseline(BaselineVSLAMLab):
-    def __init__(self, baselines_path):
+    def __init__(self):
         baseline_name = 'glomap'
         baseline_folder = 'glomap'
-        baseline_path = os.path.join(VSLAMLAB_BASELINES, baseline_folder)
-        default_parameters = [f'verbose:1', f'matcher_type:sequential', 'use_gpu: use_gpu:1', 'max_rgb:50',
-                              'settings_yaml: settings_yaml:Baselines/glomap/glomap_settings.yaml']
+        default_parameters = {'verbose': 1, 'matcher_type': 'sequential', 'use_gpu': 1, 'max_rgb': 100}
 
         # Initialize the baseline
-        super().__init__(baseline_name, baselines_path)
-        self.label = f"\033[96m{baseline_name}\033[0m"
-        self.baseline_path = baseline_path
-        self.default_parameters = default_parameters
+        super().__init__(baseline_name, baseline_folder, default_parameters)
+
+    def build_execute_command(self, exp_it, exp, dataset, sequence_name):
+        return super().build_execute_command_cpp(exp_it, exp, dataset, sequence_name)
+
+    def is_installed(self):
+        return os.path.isfile(os.path.join(self.baseline_path, 'bin', 'glomap'))
+
+    def info_print(self):
+        super().info_print()
+        print(f"Default executable: Baselines/glomap/bin/glomap")
+
+
