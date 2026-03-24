@@ -33,9 +33,9 @@ SCRIPT_LABEL = f"\033[95m[{Path(__file__).name}]\033[0m "
 class BaselineVSLAMLab(ABC):
     """Base baseline class for VSLAM-LAB."""
 
-    # ---- Abstract hooks that concrete baselines must implement ---- 
-    @abstractmethod  
-    def __init__(self, baseline_name: str, baseline_folder: str, default_parameters='') -> None:  
+    # ---- Abstract hooks that concrete baselines must implement ----
+    @abstractmethod
+    def __init__(self, baseline_name: str, baseline_folder: str, default_parameters='') -> None:
         # Basic fields
         self.baseline_name: str = baseline_name
         self.baseline_folder: str = baseline_folder
@@ -50,15 +50,15 @@ class BaselineVSLAMLab(ABC):
         # Defaults parameters
         self.default_parameters = default_parameters
 
-    @abstractmethod  
+    @abstractmethod
     def build_execute_command(self, exp_it, exp, dataset, sequence_name) -> str: ...
 
-    @abstractmethod  
+    @abstractmethod
     def is_installed(self) -> bool: ...
 
     def is_cloned(self) -> bool:
         return (self.baseline_path / '.git').is_dir()
-    
+
     def git_clone(self) -> None:
         if self.is_cloned():
             return
@@ -71,7 +71,7 @@ class BaselineVSLAMLab(ABC):
             subprocess.run(git_clone_command, shell=True, stdout=log_file, stderr=log_file)
 
     ####################################################################################################################
-    # Auxiliary methods    
+    # Auxiliary methods
     def install(self) -> None:
         if self.is_installed()[0]:
             return
@@ -93,9 +93,9 @@ class BaselineVSLAMLab(ABC):
 
         if is_installed:
             print_msg(f"{ws(0)}", f"Installed:\033[92m {install_msg}\033[0m", verb='LOW')
-        else:    
+        else:
             print_msg(f"{ws(0)}", f"Installed:\033[93m {install_msg}\033[0m", verb='LOW')
-  
+
         is_cloned = self.is_cloned()
         print(f"Path:\033[92m {self.baseline_path}\033[0m" if is_cloned else f"Path:\033[93m {self.baseline_path} (missing)\033[0m")
         print(f'Modalities: {self.modes}')
@@ -107,7 +107,7 @@ class BaselineVSLAMLab(ABC):
             print_msg(SCRIPT_LABEL, f"Downloading {self.settings_yaml} ...",'info')
             _ = hf_hub_download(repo_id=f'vslamlab/{self.baseline_name}', filename=settings_yaml, repo_type='model', local_dir=self.baseline_path)
         return self.settings_yaml.is_file()
-    
+
     def build_execute_command_cpp(self, exp_it, exp, dataset, sequence_name):
         sequence_path = dataset.dataset_path / sequence_name
         exp_folder = Path(exp.folder) / dataset.dataset_folder / sequence_name
@@ -155,11 +155,11 @@ class BaselineVSLAMLab(ABC):
     ####################################################################################################################
     # Execute methods
     def kill_process(self, process):
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)  
+        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
         try:
-            process.wait(timeout=5) 
+            process.wait(timeout=5)
         except subprocess.TimeoutExpired:
-            os.killpg(os.getpgid(process.pid), signal.SIGKILL) 
+            os.killpg(os.getpgid(process.pid), signal.SIGKILL)
         print_msg(SCRIPT_LABEL, "Process killed.",'error')
 
     def monitor_memory(self, process, interval, comment_queue, success_flag, memory_stats):
@@ -167,66 +167,66 @@ class BaselineVSLAMLab(ABC):
         MAX_RAM_PERC= 0.95
 
         # Initialize NVML safely
-        gpu_handle = None
-        try:
-            pynvml.nvmlInit()
-            if pynvml.nvmlDeviceGetCount() > 0:
-                gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-        except Exception:
-            pass # No NVIDIA GPU or driver issue
+        # gpu_handle = None
+        # try:
+        #     pynvml.nvmlInit()
+        #     if pynvml.nvmlDeviceGetCount() > 0:
+        #         gpu_handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        # except Exception:
+        #     pass # No NVIDIA GPU or driver issue
 
-        # Initial snapshots
-        swap_0 = psutil.swap_memory().used / (1024**3)
-        swap_max = psutil.swap_memory().total / (1024**3)
-        ram_0 = psutil.virtual_memory().used / (1024**3)
-        ram_max = psutil.virtual_memory().total / (1024**3)
+        # # Initial snapshots
+        # swap_0 = psutil.swap_memory().used / (1024**3)
+        # swap_max = psutil.swap_memory().total / (1024**3)
+        # ram_0 = psutil.virtual_memory().used / (1024**3)
+        # ram_max = psutil.virtual_memory().total / (1024**3)
 
-        gpu_0 = 0
-        if gpu_handle:
-            try:
-                gpu_0 = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle).used / (1024**3)
-            except Exception:
-                pass
+        # gpu_0 = 0
+        # if gpu_handle:
+        #     try:
+        #         gpu_0 = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle).used / (1024**3)
+        #     except Exception:
+        #         pass
 
-        ram_inc_max, swap_inc_max, gpu_inc_max = 0, 0, 0      
-        while process.poll() is None: 
+        ram_inc_max, swap_inc_max, gpu_inc_max = 0, 0, 0
+        while process.poll() is None:
             try:
                 # 1. Check System Safety (Global)
-                ram = psutil.virtual_memory()
-                swap = psutil.swap_memory()
-                
-                ram_used = ram.used / (1024**3)
-                swap_used = swap.used / (1024**3)
-                
-                ram_perc = ram_used / ram_max if ram_max > 0 else 0.0
-                swap_perc = swap_used / swap_max if swap_max > 0 else 0.0
+                # ram = psutil.virtual_memory()
+                # swap = psutil.swap_memory()
 
-                if ram_perc > MAX_RAM_PERC:
-                    msg = f"RAM threshold exceeded: {ram_used:.1f}/{ram_max:.1f} GB (> {MAX_RAM_PERC:.0%})"
-                    print_msg(SCRIPT_LABEL, msg, 'error')
-                    success_flag[0] = False
-                    comment_queue.put(msg + ". Process killed.")
-                    self.kill_process(process)
-                    break
-                
-                if swap_perc > MAX_SWAP_PERC:
-                    msg = f"Swap threshold exceeded: {swap_used:.1f}/{swap_max:.1f} GB (> {MAX_SWAP_PERC:.0%})"
-                    print_msg(SCRIPT_LABEL, msg, 'error')
-                    success_flag[0] = False
-                    comment_queue.put(msg + ". Process killed.")
-                    self.kill_process(process)
-                    break
+                # ram_used = ram.used / (1024**3)
+                # swap_used = swap.used / (1024**3)
 
-                # 2. Track Usage Stats (Incremental)
-                ram_inc_max = max(ram_inc_max, ram_used - ram_0)
-                swap_inc_max = max(swap_inc_max, swap_used - swap_0)
+                # ram_perc = ram_used / ram_max if ram_max > 0 else 0.0
+                # swap_perc = swap_used / swap_max if swap_max > 0 else 0.0
 
-                if gpu_handle:
-                    try:
-                        gpu_used = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle).used / (1024**3)
-                        gpu_inc_max = max(gpu_inc_max, gpu_used - gpu_0)
-                    except Exception:
-                        pass # GPU stats failed, ignore
+                # if ram_perc > MAX_RAM_PERC:
+                #     msg = f"RAM threshold exceeded: {ram_used:.1f}/{ram_max:.1f} GB (> {MAX_RAM_PERC:.0%})"
+                #     print_msg(SCRIPT_LABEL, msg, 'error')
+                #     success_flag[0] = False
+                #     comment_queue.put(msg + ". Process killed.")
+                #     self.kill_process(process)
+                #     break
+
+                # if swap_perc > MAX_SWAP_PERC:
+                #     msg = f"Swap threshold exceeded: {swap_used:.1f}/{swap_max:.1f} GB (> {MAX_SWAP_PERC:.0%})"
+                #     print_msg(SCRIPT_LABEL, msg, 'error')
+                #     success_flag[0] = False
+                #     comment_queue.put(msg + ". Process killed.")
+                #     self.kill_process(process)
+                #     break
+
+                # # 2. Track Usage Stats (Incremental)
+                # ram_inc_max = max(ram_inc_max, ram_used - ram_0)
+                # swap_inc_max = max(swap_inc_max, swap_used - swap_0)
+
+                # if gpu_handle:
+                #     try:
+                #         gpu_used = pynvml.nvmlDeviceGetMemoryInfo(gpu_handle).used / (1024**3)
+                #         gpu_inc_max = max(gpu_inc_max, gpu_used - gpu_0)
+                #     except Exception:
+                #         pass # GPU stats failed, ignore
 
                 time.sleep(interval)
 
@@ -234,11 +234,11 @@ class BaselineVSLAMLab(ABC):
                 break
 
         # Shutdown NVML if it was initialized
-        if gpu_handle:
-            try:
-                pynvml.nvmlShutdown()
-            except Exception:
-                pass
+        # if gpu_handle:
+        #     try:
+        #         pynvml.nvmlShutdown()
+        #     except Exception:
+        #         pass
 
         memory_stats['ram'] = ram_inc_max
         memory_stats['swap'] = swap_inc_max
@@ -248,7 +248,7 @@ class BaselineVSLAMLab(ABC):
         log_file_path = exp_folder / ("system_output_" + str(exp_it).zfill(5) + ".txt")
         comments = ""
         comment_queue = queue.Queue()
-        success_flag = [True] 
+        success_flag = [True]
         memory_stats = {}
         with open(log_file_path, 'w') as log_file:
             print(f"{ws(8)}log file: {log_file_path}")
@@ -256,7 +256,7 @@ class BaselineVSLAMLab(ABC):
                 process = subprocess.Popen(command, shell=True, stdout=log_file, stderr=log_file, text=True, preexec_fn=os.setsid)
             else:
                 process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)
-                
+
             memory_thread = threading.Thread(target=self.monitor_memory, args=(process, 10, comment_queue, success_flag, memory_stats))
             memory_thread.start()
 
@@ -267,7 +267,7 @@ class BaselineVSLAMLab(ABC):
                 comments = f"Process took too long > {timeout_seconds} seconds. Process killed."
                 success_flag[0] = False
                 self.kill_process(process)
-            
+
             memory_thread.join()
             while not comment_queue.empty():
                 comments += comment_queue.get() + "\n"
