@@ -31,6 +31,9 @@ sequence_names:
   - ssk17-s30
   - ssk18-s30
   - sskall-s30
+  - ssktwo-s03
+  - ssktwo-s15
+  - ssktwo-s30
 
 subsets:
   ssk16-s01: [ssk16, "rgb_0/8312297.jpg", 1.0] # parent sequence, target image path, radius in meters
@@ -54,3 +57,6 @@ combined:
   sskall-s05: [ssk16-s05, ssk17-s05, ssk18-s05]
   sskall-s15: [ssk16-s15, ssk17-s15, ssk18-s15]
   sskall-s30: [ssk16-s30, ssk17-s30, ssk18-s30]
+  ssktwo-s03: [ssk16-s03, ssk17-s03]
+  ssktwo-s15: [ssk16-s15, ssk17-s15]
+  ssktwo-s30: [ssk16-s30, ssk17-s30]
