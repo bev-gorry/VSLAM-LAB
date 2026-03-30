@@ -252,10 +252,10 @@ class BaselineVSLAMLab(ABC):
         memory_stats = {}
         with open(log_file_path, 'w') as log_file:
             print(f"{ws(8)}log file: {log_file_path}")
-            if VSLAMLAB_VERBOSITY == 0:
-                process = subprocess.Popen(command, shell=True, stdout=log_file, stderr=log_file, text=True, preexec_fn=os.setsid)
-            else:
-                process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)
+            # if VSLAMLAB_VERBOSITY == 0:
+            process = subprocess.Popen(command, shell=True, stdout=log_file, stderr=log_file, text=True, preexec_fn=os.setsid)
+            # else:
+                # process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)
                 
             memory_thread = threading.Thread(target=self.monitor_memory, args=(process, 10, comment_queue, success_flag, memory_stats))
             memory_thread.start()
