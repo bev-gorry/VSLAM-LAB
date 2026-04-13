@@ -1,6 +1,7 @@
 dataset_name: lizardisland
 
 rgb_hz: 10.0
+local_raw_data_path: "/media/beverley/beverley_t7/Raw Data/Serena_Mou_Data" 
 modes: ["mono"]
 cam_models: ["pinhole"]
 target_resolution: [640, 480]
@@ -9,3 +10,6 @@ sequence_names:
   - feb
   - mar
   - sep
+
+subsets:
+  feb-s01: [feb, "rgb_0/G0027533.JPG", 1.0]
