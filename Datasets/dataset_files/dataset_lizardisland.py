@@ -50,15 +50,29 @@ class LIZARDISLAND_dataset(DatasetVSLAMLab):
     
     def download_sequence_data(self, sequence_name: str) -> None:        
         sequence_path: Path = self.dataset_path / sequence_name
-        raw_path: Path = sequence_path / "raw"
         rgb_path: Path = sequence_path / "rgb_0"
-        rgb_csv: Path = sequence_path / "rgb.csv"
-        gt_csv: Path = sequence_path / "groundtruth.csv"
         if rgb_path.exists():
             return
+        
+        if sequence_name in self.subsets.keys():
+            self.download_sequence_data(self.subsets.get(sequence_name)[0])
+            self.download_subsequence(sequence_name)
+            return
+            
+        if sequence_name in self.combined.keys():
+            for subset in self.combined.get(sequence_name):
+                self.download_sequence_data(subset)
+            self.download_combined_subsequence(sequence_name)
+            return
+            
+        # Standard download procedure for sequence
+        raw_path: Path = sequence_path / "raw"
+        rgb_csv: Path = sequence_path / "rgb.csv"
+        gt_csv: Path = sequence_path / "groundtruth.csv"
+        
         rgb_path.mkdir(parents=True, exist_ok=True)
         raw_path.mkdir(parents=True, exist_ok=True)
-
+        
         year = '25' if 'sep' in sequence_name else '24'
         local_sequence_path = Path(self.local_raw_data_path) / f"LIRS_{str(sequence_name.capitalize())}_{year}"
         
@@ -66,9 +80,7 @@ class LIZARDISLAND_dataset(DatasetVSLAMLab):
         if not local_sequence_path.exists():
             print(f"Local sequence path {local_sequence_path} does not exist.")
             return
-        
-        gps_lookup = self._load_gps_lookup(sequence_name)
-        
+
         image_files = []
         for root, _, files in os.walk(local_sequence_path):
             for file in files:
@@ -76,6 +88,7 @@ class LIZARDISLAND_dataset(DatasetVSLAMLab):
                     image_files.append(Path(root) / file)
         print_msg(SCRIPT_LABEL, f"Found {len(image_files)} TOTAL images. Starting download...")
         
+        gps_lookup = self._load_gps_lookup(sequence_name)
         origin_latlon: tuple[float, float, float] | None = None
         for f in image_files:
             key = f.name.upper()
@@ -135,6 +148,81 @@ class LIZARDISLAND_dataset(DatasetVSLAMLab):
                 writer_gt.writerow([ts_ns, tx, ty, tz, 0, 0, 0, 1])
                 
                 ts_ns += timestamp_increment
+    
+    def download_subsequence(self, sequence_name: str) -> None:        
+        sequence_path: Path = self.dataset_path / sequence_name
+        rgb_path: Path = sequence_path / "rgb_0"
+        rgb_csv: Path = sequence_path / "rgb.csv"
+        gt_csv: Path = sequence_path / "groundtruth.csv"
+        if rgb_path.exists():
+            print("rgb_path exists.")
+            return
+        rgb_path.mkdir(parents=True, exist_ok=True)
+
+        parent_sequence = self.subsets.get(sequence_name)[0]
+        parent_sequence_path: Path = self.dataset_path / parent_sequence
+                
+        parent_rgb_csv: Path = parent_sequence_path / "rgb.csv"
+        parent_gt_csv: Path = parent_sequence_path / "groundtruth.csv"
+        df_rgb = pd.read_csv(parent_rgb_csv)
+        df_gt = pd.read_csv(parent_gt_csv)
+        
+        target_image_name = self.subsets.get(sequence_name)[1]
+        radius = self.subsets.get(sequence_name)[2]
+        target_idx = df_rgb.index[df_rgb['path_rgb_0'] == target_image_name].tolist()
+        ref_idx = target_idx[0]
+        ref_x = df_gt.at[ref_idx, 'tx (m)']
+        ref_y = df_gt.at[ref_idx, 'ty (m)']
+        ref_z = df_gt.at[ref_idx, 'tz (m)']
+
+        distances = np.sqrt(
+            (df_gt['tx (m)'] - ref_x)**2 +
+            (df_gt['ty (m)'] - ref_y)**2 +
+            (df_gt['tz (m)'] - ref_z)**2
+        )
+        mask = distances <= radius
+        df_rgb_sub = df_rgb[mask].copy().reset_index(drop=True)
+        df_gt_sub = df_gt[mask].copy().reset_index(drop=True)
+
+        for _, row in df_rgb_sub.iterrows():
+            rel_path = row['path_rgb_0']
+            full_src = os.path.abspath(parent_sequence_path / rel_path)
+            full_dst = os.path.abspath(sequence_path / rel_path)
+            if os.path.exists(full_dst) or os.path.islink(full_dst):
+                os.remove(full_dst)
+            os.symlink(full_src, full_dst)
+
+        df_rgb_sub.to_csv(rgb_csv, index=False, sep=',')
+        df_gt_sub.to_csv(gt_csv, index=False, sep=',')
+    
+    def download_combined_subsequence(self, sequence_name):
+        sequence_path: Path = self.dataset_path / sequence_name
+        rgb_path: Path = sequence_path / "rgb_0"
+        rgb_csv: Path = sequence_path / "rgb.csv"
+        gt_csv: Path = sequence_path / "groundtruth.csv"
+        if rgb_path.exists():
+            return
+        rgb_path.mkdir(parents=True, exist_ok=True)
+        
+        dfs_rgb = []
+        dfs_pose = []
+        for subset in self.combined.get(sequence_name):
+            parent_sequence_path: Path = self.dataset_path / subset
+            parent_rgb_csv: Path = parent_sequence_path / "rgb.csv"
+            parent_gt_csv: Path = parent_sequence_path / "groundtruth.csv"
+            dfs_rgb.append(pd.read_csv(parent_rgb_csv))
+            dfs_pose.append(pd.read_csv(parent_gt_csv))
+            for _, row in dfs_rgb[-1].iterrows():
+                rel_path = row['path_rgb_0']
+                full_src = os.path.abspath(os.path.join(parent_sequence_path, rel_path))
+                full_dst = os.path.abspath(os.path.join(sequence_path, rel_path))
+                if os.path.exists(full_dst) or os.path.islink(full_dst):
+                    os.remove(full_dst)
+                os.symlink(full_src, full_dst)
+            df_rgb_all = pd.concat(dfs_rgb, ignore_index=True)
+            df_pose_all = pd.concat(dfs_pose, ignore_index=True)
+            df_rgb_all.to_csv(rgb_csv, index=False, sep=',')
+            df_pose_all.to_csv(gt_csv, index=False, sep=',')
     
     def create_rgb_folder(self, sequence_name: str) -> None:
         pass

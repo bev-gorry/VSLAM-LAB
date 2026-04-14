@@ -1,7 +1,7 @@
 dataset_name: lizardisland
 
 rgb_hz: 10.0
-local_raw_data_path: "/media/beverley/beverley_t7/Raw Data/Serena_Mou_Data" 
+local_raw_data_path: "/media/beverley/beverley_t7/Raw Data/Serena_Mou_Data"
 modes: ["mono"]
 cam_models: ["pinhole"]
 target_resolution: [640, 480]
@@ -13,3 +13,7 @@ sequence_names:
 
 subsets:
   feb-s01: [feb, "rgb_0/G0027533.JPG", 1.0]
+  mar-s01: [mar, "rgb_0/G0018132.JPG", 1.0]
+
+combined:
+  lirstwo-s01: [feb-s01, mar-s01]
