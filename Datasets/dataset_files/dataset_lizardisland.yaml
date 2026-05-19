@@ -10,10 +10,20 @@ sequence_names:
   - feb
   - mar
   - sep
+  - feb-s01
+  - mar-s01
+  - feb-s02
+  - mar-s02
+  - lirstwo-s01
+  - lirstwo-s02
+
 
 subsets:
-  feb-s01: [feb, "rgb_0/G0027533.JPG", 1.0]
-  mar-s01: [mar, "rgb_0/G0018132.JPG", 1.0]
+  feb-s01: [feb, "rgb_0/G0027533.JPG", 3.0]
+  mar-s01: [mar, "rgb_0/G0018132.JPG", 3.0]
+  feb-s02: [feb, "rgb_0/G0027533.JPG", 5.0]
+  mar-s02: [mar, "rgb_0/G0018132.JPG", 5.0]
 
 combined:
   lirstwo-s01: [feb-s01, mar-s01]
+  lirstwo-s02: [feb-s02, mar-s02]

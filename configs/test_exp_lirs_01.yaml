@@ -1,0 +1,8 @@
+exp_lirs_01:
+  Config: test_config_lirs_01.yaml
+  NumRuns: 1
+  Parameters:
+    matcher_type: custom
+    verbose: 0
+  Module: glomap
+
