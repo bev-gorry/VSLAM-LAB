@@ -307,7 +307,7 @@ platforms = ["linux-64"]
 cuda = "12.6"
 
 [feature.colmap.tasks]
-git-clone = { cmd = 'git clone https://huggingface.co/vslamlab/colmap-vslamlab colmap', cwd = 'Baselines' }
+git-clone = { cmd = 'git clone https://huggingface.co/beverley-gorry/colmap-vslamlab colmap', cwd = 'Baselines' }
 execute-mono = './Baselines/colmap/colmap_reconstruction.sh'
 
 [feature.colmap.dependencies]
