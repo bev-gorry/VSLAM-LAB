@@ -1,0 +1,49 @@
+dataset_name: eiffel
+
+rgb_hz: 10.0
+local_raw_data_path: "/media/beverley/beverley_t7/SANGOHENKA-BENCHMARK/EIFFEL"
+modes: ["mono"]
+cam_models: ["pinhole"]
+target_resolution: [640, 480]
+
+sequence_names:
+  - eff15
+  - eff16
+  - eff18
+  - eff20
+  - eff1516
+  - eff1618
+  - eff1820
+  - effall
+  - eff15-s01
+  - eff16-s01
+  - eff18-s01
+  - eff20-s01
+  - effall-s01
+  - eff15-s02
+  - eff16-s02
+  - eff18-s02
+  - effthree-s02
+  - eff15-s10
+  - eff16-s10
+  - eff18-s10
+  - effthree-s10
+
+subsets:
+  eff15-s01: [eff15, "rgb_0/20150418T012720.000Z.png", 3.0] # this is the first image (to be corrected)
+  eff16-s01: [eff16, "rgb_0/20160910T072925.000Z.png", 3.0] # this is the first image (to be corrected)
+  eff18-s01: [eff18, "rgb_0/20180816T054114.000Z.png", 3.0] # this is the first image (to be corrected)
+  eff20-s01: [eff20, "rgb_0/20200918T042729.000Z.png", 3.0] # this is the first image (to be corrected)
+
+  eff15-s02: [eff15, "rgb_0/20150418T022232.000Z.png", 5.0]
+  eff16-s02: [eff16, "rgb_0/20160910T101938.000Z.png", 5.0]
+  eff18-s02: [eff18, "rgb_0/20180816T063917.000Z.png", 5.0]
+
+  eff15-s10: [eff15, "rgb_0/20150418T022232.000Z.png", 10.0]
+  eff16-s10: [eff16, "rgb_0/20160910T101938.000Z.png", 10.0]
+  eff18-s10: [eff18, "rgb_0/20180816T063917.000Z.png", 10.0]
+
+combined:
+  effall-s01: [eff15-s01, eff16-s01, eff18-s01, eff20-s01]
+  effthree-s02: [eff15-s02, eff16-s02, eff18-s02]
+  effthree-s10: [eff15-s10, eff16-s10, eff18-s10]
