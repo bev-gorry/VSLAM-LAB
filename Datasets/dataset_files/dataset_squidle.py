@@ -273,6 +273,10 @@ class SESOKO_dataset(SQUIDLE_dataset):
             #parent_sequence = _get_subsequence_name(sequence_name)
             parent_sequence = self.subsets.get(sequence_name)[0]
             parent_sequence_path: Path = self.dataset_path / parent_sequence
+            shutil.copy2(
+                parent_sequence_path / "calibration.yaml",
+                sequence_path / "calibration.yaml",
+            )
 
             parent_rgb_csv: Path = parent_sequence_path / "rgb.csv"
             parent_gt_csv: Path = parent_sequence_path / "groundtruth.csv"

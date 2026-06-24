@@ -80,28 +80,60 @@ class EIFFEL_dataset(DatasetVSLAMLab):
 
         parent_sequence = self.subsets.get(sequence_name)[0]
         parent_sequence_path: Path = self.dataset_path / parent_sequence
+        shutil.copy2(
+            parent_sequence_path / "calibration.yaml",
+            sequence_path / "calibration.yaml",
+        )
                 
         parent_rgb_csv: Path = parent_sequence_path / "rgb.csv"
         parent_gt_csv: Path = parent_sequence_path / "groundtruth.csv"
         df_rgb = pd.read_csv(parent_rgb_csv)
         df_gt = pd.read_csv(parent_gt_csv)
+
+        df_rgb["_ts_key"] = pd.to_numeric(df_rgb["ts_rgb_0 (ns)"]).round().astype("int64")
+        df_gt["_ts_key"] = pd.to_numeric(df_gt["ts (ns)"]).round().astype("int64")
+        df_pose = df_rgb.merge(
+            df_gt,
+            on="_ts_key",
+            how="inner",
+            validate="one_to_one",
+            suffixes=("", "_gt"),
+        )
+        if len(df_pose) != len(df_rgb):
+            missing = len(df_rgb) - len(df_pose)
+            raise ValueError(
+                f"Could not match {missing} RGB frame(s) to ground truth by timestamp "
+                f"for EIFFEL sequence {parent_sequence}."
+            )
         
         target_image_name = self.subsets.get(sequence_name)[1]
         radius = self.subsets.get(sequence_name)[2]
-        target_idx = df_rgb.index[df_rgb['path_rgb_0'] == target_image_name].tolist()
+        target_idx = df_pose.index[df_pose['path_rgb_0'] == target_image_name].tolist()
+        if not target_idx:
+            raise ValueError(
+                f"Target image {target_image_name} was not found in {parent_rgb_csv}."
+            )
         ref_idx = target_idx[0]
-        ref_x = df_gt.at[ref_idx, 'tx (m)']
-        ref_y = df_gt.at[ref_idx, 'ty (m)']
-        ref_z = df_gt.at[ref_idx, 'tz (m)']
+        ref_x = df_pose.at[ref_idx, 'tx (m)']
+        ref_y = df_pose.at[ref_idx, 'ty (m)']
+        ref_z = df_pose.at[ref_idx, 'tz (m)']
 
         distances = np.sqrt(
-            (df_gt['tx (m)'] - ref_x)**2 +
-            (df_gt['ty (m)'] - ref_y)**2 +
-            (df_gt['tz (m)'] - ref_z)**2
+            (df_pose['tx (m)'] - ref_x)**2 +
+            (df_pose['ty (m)'] - ref_y)**2 +
+            (df_pose['tz (m)'] - ref_z)**2
         )
         mask = distances <= radius
-        df_rgb_sub = df_rgb[mask].copy().reset_index(drop=True)
-        df_gt_sub = df_gt[mask].copy().reset_index(drop=True)
+        df_rgb_sub = (
+            df_pose.loc[mask, df_rgb.columns.drop("_ts_key")]
+            .copy()
+            .reset_index(drop=True)
+        )
+        df_gt_sub = (
+            df_pose.loc[mask, df_gt.columns.drop("_ts_key")]
+            .copy()
+            .reset_index(drop=True)
+        )
 
         for _, row in df_rgb_sub.iterrows():
             rel_path = row['path_rgb_0']
@@ -165,5 +197,3 @@ class EIFFEL_dataset(DatasetVSLAMLab):
 
     def remove_unused_files(self, sequence_name: str) -> None:
         pass
-
-
