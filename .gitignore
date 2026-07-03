@@ -6,6 +6,7 @@ __pycache__/
 Evaluate/__pycache__/
 Compare/__pycache__/
 *.egg-info
+*.DS_Store
 
 # pixi environments
 .pixi
