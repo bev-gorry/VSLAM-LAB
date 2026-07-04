@@ -163,8 +163,8 @@ class BaselineVSLAMLab(ABC):
         print_msg(SCRIPT_LABEL, "Process killed.",'error')
 
     def monitor_memory(self, process, interval, comment_queue, success_flag, memory_stats):
-        MAX_SWAP_PERC = 0.80
-        MAX_RAM_PERC= 0.95
+        MAX_SWAP_PERC = 1.0
+        MAX_RAM_PERC= 1.0
 
         # Initialize NVML safely
         gpu_handle = None
