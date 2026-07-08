@@ -29,6 +29,11 @@ sequence_names:
   - eff16-s15
   - eff18-s15
   - effall-s15
+  - eff16-full
+  - eff18-full
+  - eff20-full
+  - effall-full
+
 
 subsets:
   # eff15-s01: [eff15, "rgb_0/20150418T012720.000Z.png", 3.0] # this is the first image (to be corrected)
@@ -53,8 +58,13 @@ subsets:
   eff16-s15: [eff16, "rgb_0/20160910T102708.000Z.png", 15.0] # selected anchor image, others are proposed by script
   eff18-s15: [eff18, "rgb_0/20180817T215153.000Z.png", 15.0]
 
+  eff16-full: [eff16, "rgb_0/20160910T075434.000Z.png", 40.0]
+  eff18-full: [eff18, "rgb_0/20180816T062805.000Z.png", 40.0]
+  eff20-full: [eff20, "rgb_0/20200918T072258.000Z.png", 40.0]
+
 combined:
   effall-s01: [eff16-s01, eff18-s01, eff20-s01]
   effall-s02: [eff16-s02, eff18-s02, eff20-s02]
   effall-s03: [eff16-s03, eff18-s03, eff20-s03]
   effall-s15: [eff15-s15, eff16-s15, eff18-s15]
+  effall-full: [eff16-full, eff18-full, eff20-full]

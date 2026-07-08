@@ -23,17 +23,14 @@ sequence_names:
   - ssk17-s05
   - ssk18-s05
   - sskall-s05
-  - ssk16-s15
-  - ssk17-s15
-  - ssk18-s15
-  - sskall-s15
-  - ssk16-s30
-  - ssk17-s30
-  - ssk18-s30
-  - sskall-s30
-  - ssktwo-s03
-  - ssktwo-s15
-  - ssktwo-s30
+  - ssk16-half
+  - ssk17-half
+  - ssk18-half
+  - sskall-half
+  - ssk16-full
+  - ssk17-full
+  - ssk18-full
+  - sskall-full
 
 subsets:
   ssk16-s01: [ssk16, "rgb_0/8312297.jpg", 1.0] # parent sequence, target image path, radius in meters
@@ -45,18 +42,15 @@ subsets:
   ssk16-s05: [ssk16, "rgb_0/8312297.jpg", 5.0]
   ssk17-s05: [ssk17, "rgb_0/8315088.jpg", 5.0]
   ssk18-s05: [ssk18, "rgb_0/8318071.jpg", 5.0]
-  ssk16-s15: [ssk16, "rgb_0/8312297.jpg", 15.0]
-  ssk17-s15: [ssk17, "rgb_0/8315088.jpg", 15.0]
-  ssk18-s15: [ssk18, "rgb_0/8318071.jpg", 15.0]
-  ssk16-s30: [ssk16, "rgb_0/8312297.jpg", 30.0]
-  ssk17-s30: [ssk17, "rgb_0/8315088.jpg", 30.0]
-  ssk18-s30: [ssk18, "rgb_0/8318071.jpg", 30.0]
+  ssk16-half: [ssk16, "rgb_0/8312297.jpg", 15.0]
+  ssk17-half: [ssk17, "rgb_0/8315088.jpg", 15.0]
+  ssk18-half: [ssk18, "rgb_0/8318071.jpg", 15.0]
+  ssk16-full: [ssk16, "rgb_0/8312297.jpg", 30.0]
+  ssk17-full: [ssk17, "rgb_0/8315088.jpg", 30.0]
+  ssk18-full: [ssk18, "rgb_0/8318071.jpg", 30.0]
 combined:
   sskall-s01: [ssk16-s01, ssk17-s01, ssk18-s01]
   sskall-s03: [ssk16-s03, ssk17-s03, ssk18-s03]
   sskall-s05: [ssk16-s05, ssk17-s05, ssk18-s05]
-  sskall-s15: [ssk16-s15, ssk17-s15, ssk18-s15]
-  sskall-s30: [ssk16-s30, ssk17-s30, ssk18-s30]
-  ssktwo-s03: [ssk16-s03, ssk17-s03]
-  ssktwo-s15: [ssk16-s15, ssk17-s15]
-  ssktwo-s30: [ssk16-s30, ssk17-s30]
+  sskall-half: [ssk16-half, ssk17-half, ssk18-half]
+  sskall-full: [ssk16-full, ssk17-full, ssk18-full]
