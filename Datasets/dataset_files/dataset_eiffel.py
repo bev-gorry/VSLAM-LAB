@@ -182,8 +182,8 @@ class EIFFEL_dataset(DatasetVSLAMLab):
         pass
     
     def create_calibration_yaml(self, sequence_name: str) -> None:
-        fx, fy, cx, cy = 541.5, 541.5, 370, 207.5
-        k1, k2, p1, p2 = -0.08, 0.10, 0.0, 0.0
+        fx, fy, cx, cy = 1345.1614720512423, 1345.1614720512423, 971.82896575649272, 534.03574810867156
+        k1, k2, p1, p2 = 0.039503358736828094, -0.013943168644131219, 0.0, 0.0
         rgb0: dict[str, Any] = {"cam_name": "rgb_0", "cam_type": "rgb",
             "cam_model": "pinhole", "focal_length": [fx, fy], "principal_point": [cx, cy],
             "distortion_coefficients": [k1, k2, p1, p2],

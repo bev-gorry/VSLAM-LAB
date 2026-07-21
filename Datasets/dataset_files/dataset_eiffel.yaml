@@ -1,10 +1,10 @@
 dataset_name: eiffel
 
-rgb_hz: 10.0
+rgb_hz: 25.0
 local_raw_data_path: "/media/beverley/beverley_t7/SANGOHENKA-BENCHMARK/EIFFEL"
 modes: ["mono"]
 cam_models: ["pinhole"]
-target_resolution: [640, 480]
+target_resolution: [1920, 1080]
 
 sequence_names:
   - eff15
@@ -33,7 +33,6 @@ sequence_names:
   - eff18-full
   - eff20-full
   - effall-full
-
 
 subsets:
   # eff15-s01: [eff15, "rgb_0/20150418T012720.000Z.png", 3.0] # this is the first image (to be corrected)
