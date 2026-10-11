@@ -4,7 +4,7 @@ Module: VSLAM-LAB - Capabilities - fastfoundationstereo.py
 - Assisted by: Claude (Fable 5)
 - Version: 2.0
 - Created: 2026-08-12
-- Updated: 2026-10-10
+- Updated: 2026-10-11
 - License: GPLv3 License
 
 Stereo depth capability (Fast-FoundationStereo, NVlabs CVPR 2026): per-frame metric depth for the rgb_0/rgb_1 pairs
@@ -18,9 +18,8 @@ pixel / depth_factor (default 256), 0 = invalid, plus the fastfoundationstereo_0
 marker holding the depth_factor. Frames already written are skipped (resume); complete sequences are skipped unless
 --overwrite. Neither rgb.csv nor calibration.yaml is modified: when an experiment sets 'depth: fastfoundationstereo',
 Run/run_functions.py appends the depth columns to its rgb_exp.csv (running this capability first if the marker is
-missing) and registers the depth stream in calibration_exp.yaml. Once a sequence has depth, the dataset's
-Datasets/dataset_files/dataset_<name>.yaml modes gain 'rgbd' (and 'rgbd-vi' with 'mono-vi') so rgbd experiments
-validate. Requires a stereo calibration.yaml with two pinhole cameras (rgb_0, rgb_1), radtan distortion or none.
+missing) and registers the depth stream in calibration_exp.yaml; that parameter is also what lets an rgbd
+experiment validate on a dataset without depth. Requires a stereo calibration.yaml with two pinhole cameras (rgb_0, rgb_1), radtan distortion or none.
 """
 
 from __future__ import annotations
@@ -31,23 +30,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from Capabilities.CapabilityVSLAMLAB import CapabilityVSLAMLAB, add_rgbd_modes  # noqa: E402
+from Capabilities.CapabilityVSLAMLAB import CapabilityVSLAMLAB  # noqa: E402
 from utilities import add_sequence_target_args, resolve_sequence_targets_or_exit, sequence_path  # noqa: E402
 
 DEPTH_FOLDER_BASE = "fastfoundationstereo"
-COMPLETE_MARKER = ".fastfoundationstereo_complete"
 CAPABILITY = CapabilityVSLAMLAB("fastfoundationstereo", "VSLAM-LAB/fastfoundationstereo")
 
 
-def generate_stereo_depth(pairs: list[tuple[str, str]], extra_args: list[str] | None = None,
-                          depth_folder_base: str = DEPTH_FOLDER_BASE) -> None:
-    """Run the capability on (dataset, sequence) pairs, then add 'rgbd' to the modes of every dataset that now has
-    complete depth for one of them."""
+def generate_stereo_depth(pairs: list[tuple[str, str]], extra_args: list[str] | None = None) -> None:
+    """Run the capability on (dataset, sequence) pairs."""
     CAPABILITY.run([sequence_path(dataset, sequence) for dataset, sequence in pairs], extra_args)
-    for dataset in sorted({dataset for dataset, _ in pairs}):
-        if any((sequence_path(dataset, sequence) / f"{depth_folder_base}_0" / COMPLETE_MARKER).exists()
-               for d, sequence in pairs if d == dataset):
-            add_rgbd_modes(dataset)
 
 
 def main() -> None:
@@ -82,7 +74,7 @@ def main() -> None:
         extra_args.append("--overwrite")
 
     pairs = resolve_sequence_targets_or_exit(args, parser)
-    generate_stereo_depth(pairs, extra_args, args.depth_folder_base)
+    generate_stereo_depth(pairs, extra_args)
 
 
 if __name__ == "__main__":

@@ -40,7 +40,7 @@ carry a model stack.
   `CapabilityVSLAMLAB(<name>, "VSLAM-LAB/<name>").run(folders, extra_args)`
   (`Capabilities/CapabilityVSLAMLAB.py`: clones/installs on first use, then
   `pixi run --manifest-path <repo>/pixi.toml --frozen inference --sequence-path ...`). Anything that touches
-  VSLAM-LAB itself stays here (e.g. `add_rgbd_modes`). It exposes a function the run pipeline calls
+  VSLAM-LAB itself stays here. It exposes a function the run pipeline calls
   (`generate_stereo_depth(pairs)`, `estimate_intrinsics(pairs)`, `compute_d_matrix(pairs)`, ...).
 
 Variations in use: a capability whose input is not a sequence folder calls `CapabilityVSLAMLAB.run_args(args)`

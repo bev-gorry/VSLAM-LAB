@@ -3,7 +3,7 @@ Module: VSLAM-LAB - Capabilities - CapabilityVSLAMLAB.py
 - Author: Alejandro Fontan Villacampa
 - Version: 1.0
 - Created: 2026-10-10
-- Updated: 2026-10-10
+- Updated: 2026-10-11
 - License: GPLv3 License
 
 CapabilityVSLAMLAB: a capability's own repository (github.com/VSLAM-LAB/<name>), cloned to
@@ -17,8 +17,6 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-
-import yaml
 
 from path_constants import VSLAM_LAB_DIR
 from utilities import print_msg
@@ -72,37 +70,3 @@ class CapabilityVSLAMLAB:
         # --manifest-path: run in the capability's own environment, not the calling (vslamlab) one
         cmd = ["pixi", "run", "--manifest-path", str(self.manifest), *(["--frozen"] if frozen else []), task, *args]
         subprocess.run(cmd, cwd=self.path, check=True)
-
-
-def add_rgbd_modes(dataset_name: str) -> None:
-    """Once a depth capability's output exists for a sequence, the dataset can run rgbd experiments: add 'rgbd' to
-    the modes list in Datasets/dataset_files/dataset_<name>.yaml, plus 'rgbd-vi' when the dataset already supports
-    'mono-vi' (imu present). Follows the existing ordering convention ('rgbd' after 'mono', 'rgbd-vi' after
-    'mono-vi'); line-based and idempotent."""
-    dataset_yaml = VSLAM_LAB_DIR / "Datasets" / "dataset_files" / f"dataset_{dataset_name}.yaml"
-    if not dataset_yaml.exists():
-        print_msg(SCRIPT_LABEL, f"{dataset_yaml} not found; cannot add 'rgbd' to the dataset modes", flag="warning")
-        return
-
-    lines = dataset_yaml.read_text().splitlines()
-    idx = next((i for i, line in enumerate(lines) if line.startswith("modes:")), None)
-    modes = yaml.safe_load(lines[idx].split("modes:", 1)[1]) if idx is not None else None
-    if not isinstance(modes, list):
-        print_msg(SCRIPT_LABEL, f"no parseable 'modes:' list in {dataset_yaml.name}; cannot add 'rgbd'", flag="warning")
-        return
-
-    def insert_after(mode: str, anchor: str) -> None:
-        if mode not in new_modes:
-            pos = new_modes.index(anchor) + 1 if anchor in new_modes else len(new_modes)
-            new_modes.insert(pos, mode)
-
-    new_modes = list(modes)
-    insert_after("rgbd", "mono")
-    if "mono-vi" in new_modes:
-        insert_after("rgbd-vi", "mono-vi")
-    if new_modes == modes:
-        return  # already up to date
-
-    lines[idx] = "modes: [" + ", ".join(f"'{mode}'" for mode in new_modes) + "]"
-    dataset_yaml.write_text("\n".join(lines) + "\n")
-    print_msg(SCRIPT_LABEL, f"{dataset_name} - modes updated to {new_modes} in {dataset_yaml.name}")

@@ -3,7 +3,7 @@ Module: VSLAM-LAB - Capabilities - depth_anything.py
 - Author: Alejandro Fontan Villacampa
 - Version: 2.0
 - Created: 2026-09-15
-- Updated: 2026-10-10
+- Updated: 2026-10-11
 - License: GPLv3 License
 
 Monocular depth capability (Depth Anything 3, default the metric nested DA3NESTED-GIANT-LARGE-1.1 model): per-frame
@@ -18,8 +18,8 @@ depth_factor (default 256), 0 = invalid, plus the depth_anything_0/.depth_anythi
 depth_factor. Frames already written are skipped (resume); complete sequences are skipped unless --overwrite.
 Neither rgb.csv nor calibration.yaml is modified: when an experiment sets 'depth: depth_anything',
 Run/run_functions.py appends the depth columns to its rgb_exp.csv (running this capability first if the marker is
-missing) and registers the depth stream in calibration_exp.yaml. Once a sequence has depth, the dataset's modes gain
-'rgbd' (and 'rgbd-vi' with 'mono-vi') so rgbd experiments validate.
+missing) and registers the depth stream in calibration_exp.yaml; that parameter is also what lets an rgbd
+experiment validate on a dataset without depth.
 """
 
 from __future__ import annotations
@@ -30,26 +30,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from Capabilities.CapabilityVSLAMLAB import CapabilityVSLAMLAB, add_rgbd_modes  # noqa: E402
+from Capabilities.CapabilityVSLAMLAB import CapabilityVSLAMLAB  # noqa: E402
 from path_constants import VSLAMLAB_BASELINES  # noqa: E402
 from utilities import add_sequence_target_args, resolve_sequence_targets_or_exit, sequence_path  # noqa: E402
 
 DEPTH_FOLDER_BASE = "depth_anything"
-COMPLETE_MARKER = ".depth_anything_complete"
 # Shares the da3 / da3-streaming baselines' checkout and environment
 CAPABILITY = CapabilityVSLAMLAB("depth_anything", "VSLAM-LAB/depthanything3",
                                 path=VSLAMLAB_BASELINES / "Depth-Anything-3", inference_task="depth-inference")
 
 
-def generate_mono_depth(pairs: list[tuple[str, str]], extra_args: list[str] | None = None,
-                        depth_folder_base: str = DEPTH_FOLDER_BASE) -> None:
-    """Run the capability on (dataset, sequence) pairs, then add 'rgbd' to the modes of every dataset that now has
-    complete depth for one of them."""
+def generate_mono_depth(pairs: list[tuple[str, str]], extra_args: list[str] | None = None) -> None:
+    """Run the capability on (dataset, sequence) pairs."""
     CAPABILITY.run([sequence_path(dataset, sequence) for dataset, sequence in pairs], extra_args)
-    for dataset in sorted({dataset for dataset, _ in pairs}):
-        if any((sequence_path(dataset, sequence) / f"{depth_folder_base}_0" / COMPLETE_MARKER).exists()
-               for d, sequence in pairs if d == dataset):
-            add_rgbd_modes(dataset)
 
 
 def main() -> None:
@@ -79,7 +72,7 @@ def main() -> None:
     if args.overwrite:
         extra_args.append("--overwrite")
 
-    generate_mono_depth(resolve_sequence_targets_or_exit(args, parser), extra_args, args.depth_folder_base)
+    generate_mono_depth(resolve_sequence_targets_or_exit(args, parser), extra_args)
 
 
 if __name__ == "__main__":
