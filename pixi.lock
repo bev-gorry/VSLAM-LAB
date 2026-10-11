@@ -1781,6 +1781,10 @@ environments:
     channels:
     - url: https://prefix.dev/conda-forge/
     packages: {}
+  iphone:
+    channels:
+    - url: https://prefix.dev/conda-forge/
+    packages: {}
   mapanything:
     channels:
     - url: https://prefix.dev/conda-forge/

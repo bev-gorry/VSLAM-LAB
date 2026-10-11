@@ -70,6 +70,7 @@ ros1 = { features = ["ros1"] }
 ros2 = { features = ["ros2"] }
 rerun = { features = ["rerun"] }
 projectaria = { features = ["projectaria"] }
+iphone = { features = ["iphone"] }
 
 ########################################################################################################################
 ########################################################################################################################
@@ -150,6 +151,7 @@ download-dataset = "python vslamlab_gui.py download_dataset"
 
 synch-gt = "python Datasets/extra-files/synch_gt.py"
 sample-vpr = "python Datasets/extra-files/sample_vpr.py"
+record-iphone = "python Datasets/extra-files/record_iphone.py"   # iphone dataset: record a sequence from the ARStream app (see [feature.iphone])
 label-sequences = "python Gym/label_sequences.py"
 select-sequences = "python Gym/select_sequences.py"
 
@@ -748,3 +750,19 @@ pip = "*"
 
 [feature.projectaria.pypi-dependencies]
 projectaria-tools = "*"
+
+########################################################################################################################
+# iphone: ARStream (github.com/VSLAM-LAB/arstream), an iOS app streaming RGB + intrinsics + ARKit pose over USB or
+# Wi-Fi, and its Mac/Linux client. `record-iphone` (vslamlab environment, Datasets/extra-files/record_iphone.py)
+# records a sequence of the `iphone` dataset with it.
+[feature.iphone]
+platforms = ["linux-64", "osx-arm64"]
+
+# Tasks forward to the clone's own pixi.toml, whose environment lives in Datasets/sources/arstream/.pixi (record-iphone
+# clones and installs it on first use too). USB (macOS usbmuxd) and ios-install (Xcode) only work on macOS; Wi-Fi
+# streaming (--wifi / --host) works on both platforms. Run tasks use --frozen so only `install` re-solves it.
+[feature.iphone.tasks]
+fetch-source = "./git-clone.sh https://github.com/VSLAM-LAB/arstream Datasets/sources/arstream"
+install = { cmd = "pixi install", cwd = "Datasets/sources/arstream", depends-on = ["fetch-source"] }
+view-iphone = { cmd = "pixi run --frozen view", cwd = "Datasets/sources/arstream" }
+ios-install = { cmd = "pixi run --frozen ios-install", cwd = "Datasets/sources/arstream" }
