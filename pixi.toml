@@ -766,3 +766,4 @@ fetch-source = "./git-clone.sh https://github.com/VSLAM-LAB/arstream Datasets/so
 install = { cmd = "pixi install", cwd = "Datasets/sources/arstream", depends-on = ["fetch-source"] }
 view-iphone = { cmd = "pixi run --frozen view", cwd = "Datasets/sources/arstream" }
 ios-install = { cmd = "pixi run --frozen ios-install", cwd = "Datasets/sources/arstream" }
+ios-launch = { cmd = "pixi run --frozen ios-launch", cwd = "Datasets/sources/arstream" }  # record-iphone runs it before a USB recording

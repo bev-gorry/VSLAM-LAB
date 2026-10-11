@@ -137,11 +137,12 @@ class IphoneDataset(DatasetVSLAMLAB):
     def _intrinsics(self, sequence_name: str) -> np.ndarray:
         """The 3x3 K of the recording, already rescaled by the app to the streamed resolution: the per-element
         median over the frames, since ARKit's per-frame intrinsics jitter by a few 1e-4 even with fixed focus. A
-        larger spread means the recording was made with autofocus on, which is warned about."""
+        larger spread (autofocus on, or a short recording started right after the app launched, while ARKit's
+        calibration still settles) is warned about."""
         Ks = np.array([frame["K"] for frame in self._frames(sequence_name)], dtype=np.float64).reshape(-1, 3, 3)
         K = np.median(Ks, axis=0)
         spread = np.abs(Ks - K).max() / max(abs(K[0, 0]), 1.0)
         if spread > _INTRINSICS_TOLERANCE:
-            print_warning(f"{sequence_name}: intrinsics vary across frames (relative spread {spread:.2e}, autofocus on?) - "
-                          f"calibration.yaml takes their median")
+            print_warning(f"{sequence_name}: intrinsics vary across frames (relative spread {spread:.2e}: autofocus on, "
+                          f"or a short recording right after the app launched?) - calibration.yaml takes their median")
         return K

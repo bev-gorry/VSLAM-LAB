@@ -12,10 +12,13 @@ Records a sequence of the `iphone` dataset from an iPhone running the ARStream a
 (--wifi / --host). The recording itself runs in the arstream repository's own environment (cloned to
 Datasets/sources/arstream, installed on first use); this script runs in the vslamlab environment and
 
-  1. records the raw ARStream layout straight into VSLAM-LAB-Benchmark/IPHONE/<sequence_name>/
+  1. over USB on macOS, brings the app to the foreground on the phone first (arstream's `ios-launch`
+     task; iOS suspends the app's listener otherwise and the connection is refused) - --no-launch
+     skips it, and over Wi-Fi the app has to be opened on the phone by hand,
+  2. records the raw ARStream layout straight into VSLAM-LAB-Benchmark/IPHONE/<sequence_name>/
      (rgb/<timestamp>.jpg, frames.jsonl, rgb.txt, arkit_poses.txt) until Ctrl-C or --duration,
-  2. appends <sequence_name> to Datasets/dataset_files/dataset_iphone.yaml's sequence_names,
-  3. runs the dataset's download_sequence so rgb_0/, rgb.csv, calibration.yaml and groundtruth.csv
+  3. appends <sequence_name> to Datasets/dataset_files/dataset_iphone.yaml's sequence_names,
+  4. runs the dataset's download_sequence so rgb_0/, rgb.csv, calibration.yaml and groundtruth.csv
      exist at once (Datasets/dataset_files/dataset_iphone.py).
 
     pixi run record-iphone                      # USB, sequence named YYYYMMDD_HHMMSS
@@ -25,8 +28,11 @@ Datasets/sources/arstream, installed on first use); this script runs in the vsla
 
 import argparse
 import os
+import platform
+import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -45,9 +51,11 @@ DATASET_YAML = REPO_ROOT / "Datasets" / "dataset_files" / f"dataset_{DATASET_NAM
 FRAMES_FILE = "frames.jsonl"
 
 # The arstream repository: its pixi.toml carries the client's stack (opencv, rerun, zeroconf) and the
-# `record` / `view` / `ios-install` tasks; `record` takes the output folder plus the connection flags.
-ARSTREAM = CapabilityVSLAMLAB("arstream", "VSLAM-LAB/arstream", path=REPO_ROOT / "Datasets" / "sources" / "arstream",
-                              inference_task="record")
+# `record` / `view` / `ios-install` / `ios-launch` tasks; `record` takes the output folder plus the connection
+# flags. One runner per task this script calls (CapabilityVSLAMLAB runs its single task).
+ARSTREAM_PATH = REPO_ROOT / "Datasets" / "sources" / "arstream"
+ARSTREAM = CapabilityVSLAMLAB("arstream", "VSLAM-LAB/arstream", path=ARSTREAM_PATH, inference_task="record")
+ARSTREAM_LAUNCH = CapabilityVSLAMLAB("arstream", "VSLAM-LAB/arstream", path=ARSTREAM_PATH, inference_task="ios-launch")
 
 
 def register_sequence(sequence_name: str) -> bool:
@@ -80,6 +88,23 @@ def frame_count(sequence_path: Path) -> int:
         return 0
     with open(frames_file, "r", encoding="utf-8") as f:
         return sum(1 for line in f if line.strip())
+
+
+def launch_app(args: argparse.Namespace) -> None:
+    """Brings ARStream to the foreground on the USB phone before a USB recording (macOS with Xcode's
+    devicectl only). A failure (no phone, app not installed) is a warning: the connection attempt that
+    follows reports the actual problem."""
+    if args.no_launch or args.wifi or args.host:
+        return
+    if platform.system() != "Darwin" or shutil.which("xcrun") is None:
+        return
+    print_info("Bringing the ARStream app to the foreground on the phone ...")
+    try:
+        ARSTREAM_LAUNCH.run_args([])
+    except subprocess.CalledProcessError:
+        print_warning("Could not launch the ARStream app (see above) - open it on the phone yourself")
+        return
+    time.sleep(1.0)  # the listener comes up right after launch; a moment's margin before connecting
 
 
 def record(sequence_path: Path, args: argparse.Namespace) -> None:
@@ -115,6 +140,8 @@ def main() -> None:
     parser.add_argument("--serial", help="device serial/UDID if several phones are plugged in")
     parser.add_argument("--view", action="store_true", help="also show the rerun viewer while recording")
     parser.add_argument("--duration", type=float, help="stop after this many seconds (default: until Ctrl-C)")
+    parser.add_argument("--no-launch", action="store_true",
+                        help="do not bring the app to the foreground on the phone before a USB recording (macOS)")
     args = parser.parse_args()
 
     dataset = get_dataset(DATASET_NAME)
@@ -124,6 +151,7 @@ def main() -> None:
     sequence_path.parent.mkdir(parents=True, exist_ok=True)
 
     print_info(f"Recording sequence {dataset.dataset_color}{args.sequence_name}\033[0m of {dataset.dataset_label} to {sequence_path}")
+    launch_app(args)
     record(sequence_path, args)
 
     n_frames = frame_count(sequence_path)
