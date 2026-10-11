@@ -10,8 +10,8 @@ exp_demo_orbslam2:
   Parameters: {verbose: 1, rgb_idx: [0,250]}
   Module: orbslam2
 
-exp_demo_glomap:
+exp_demo_colmap:
   Config: config_vslamlab.yaml
   NumRuns: 1
   Parameters: {verbose: 1, rgb_idx: [0,250], matcher_type: exhaustive}
-  Module: glomap
+  Module: colmap
