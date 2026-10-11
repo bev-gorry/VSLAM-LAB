@@ -68,6 +68,7 @@ from Datasets.dataset_files.dataset_videos import VideosDataset
 from Datasets.dataset_files.dataset_youtube import YoutubeDataset
 from Datasets.dataset_files.dataset_strayscanner import StrayscannerDataset
 from Datasets.dataset_files.dataset_pupil_labs import PupilLabsDataset
+from Datasets.dataset_files.dataset_iphone import IphoneDataset
 
 SCRIPT_LABEL = f"\033[95m[{Path(__file__).name}]\033[0m "
 
@@ -132,6 +133,7 @@ def get_dataset(dataset_name):
         "youtube": lambda: YoutubeDataset(),
         "strayscanner": lambda: StrayscannerDataset(),
         "pupil-labs": lambda: PupilLabsDataset(),
+        "iphone": lambda: IphoneDataset(),
     }
 
     return switcher.get(dataset_name, lambda: "Invalid case")()

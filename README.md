@@ -282,6 +282,7 @@ To [awesome-slam-datasets](https://github.com/youngguncho/awesome-slam-datasets)
 | [**Pupil Labs Neon**](https://pupil-labs.com/) |  📸🥽 | `pupil-labs` | `mono(-vi)` | `pinhole` |
 | **Local video files** |  📸 | `videos` | `mono` | `pinhole` `unknown` |
 | [**YouTube videos**](https://www.youtube.com/) <br><sub>add one with the [`add-youtube-video`](.claude/skills/add-youtube-video/SKILL.md) skill</sub> |  📸 | `youtube` | `mono` | `pinhole` `radtan4` `unknown` |
+| [**iPhone (ARStream app)**](https://github.com/VSLAM-LAB/arstream) <br><sub>record one with `pixi run record-iphone [<sequence>]` (USB or `--wifi`); ARKit's VIO pose as groundtruth</sub> |  📸🤳 | `iphone` | `mono` | `pinhole` |
 <!-- | [**Underwater caves sonar and vision data set**](https://cirs.udg.edu/caves-dataset/)  |  📸🏞️🌊 |   `caves`  | `mono` | `pinhole` | -->
 <!-- | [**ScanNet++: A High-Fidelity Dataset of 3D Indoor Scenes**](https://scannetpp.mlsg.cit.tum.de/scannetpp/) |  📸🏠🤳 | `scannetplusplus` | `mono`| `pinhole` | -->
 <!-- [**Monocular Visual Odometry Dataset**](https://cvg.cit.tum.de/data/datasets/mono-dataset) | 📸🏠🤳 |  `monotum`  | `mono` | `pinhole` | -->
