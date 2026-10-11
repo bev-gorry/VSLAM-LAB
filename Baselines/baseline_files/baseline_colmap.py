@@ -1,39 +1,40 @@
-import os.path
 from pathlib import Path
-from typing import TYPE_CHECKING
-from huggingface_hub import hf_hub_download
 
-from utilities import print_msg
 from Baselines.BaselineVSLAMLAB import BaselineVSLAMLAB
 
 SCRIPT_LABEL = f"\033[95m[{Path(__file__).name}]\033[0m "
 
-if TYPE_CHECKING:
-    from Datasets.DatasetVSLAMLAB import DatasetVSLAMLAB
-    from vslamlab_utilities import Experiment
-
 
 class COLMAP_baseline(BaselineVSLAMLAB):
-    """colmap helper for VSLAM-LAB Baselines."""
+    """colmap helper for VSLAM-LAB Baselines (entry point: Baselines/colmap/vslamlab_colmap.py)."""
 
     def __init__(self, baseline_name: str = 'colmap', baseline_folder: str = 'colmap') -> None:
 
+        # matcher_type: 'exhaustive' | 'sequential' (sequential with loop detection; the vocabulary
+        # tree for the feature type is COLMAP's default, auto-downloaded once into ~/.cache/colmap).
+        # matching_type: feature extraction + matching pair (Baselines/colmap/colmap_matcher.py):
+        # sift_bruteforce | sift_lightglue | aliked_bruteforce | aliked_lightglue | loma_b_bruteforce |
+        # loma_b_loma | loma_b_loma_r | loma_b_loma_l | loma_b_loma_g | loma_b128_bruteforce | loma_b128_loma.
+        # ALIKED / LoMa / LightGlue are ONNX models COLMAP downloads once into ~/.cache/colmap (as are the
+        # vocabulary trees of matcher_type: sequential); `pixi run download-colmap-models` pre-fetches them
+        # for nodes without internet.
         # use_mask: 1 -> feature extraction honours the rgb csv's path_mask_<i> column when the run
         # pipeline provides one ('segmentation: mask2former', 'refraction: refrax', datasets that
-        # ship masks); 0 -> masks ignored (see Baselines/colmap/colmap_matcher.sh).
+        # ship masks); 0 -> masks ignored (see Baselines/colmap/colmap_matcher.py).
         # optimize_intrinsics: 1 -> bundle adjustment refines the camera intrinsics (focal length and
         # distortion; the principal point stays fixed, as in COLMAP's default); 0 -> the intrinsics
         # from the calibration yaml are kept fixed. Ignored (forced to 1) when the calibration model
-        # is 'unknown', since there are no intrinsics to keep (see Baselines/colmap/colmap_mapper.sh).
+        # is 'unknown', since there are no intrinsics to keep (see Baselines/colmap/colmap_mapper.py).
         # dense: 1 -> after the sparse model and trajectory are written, run COLMAP's dense pipeline
         # (image_undistorter -> patch_match_stereo -> stereo_fusion) on the best sub-model, into
         # <exp_folder>/colmap_<id>/dense/ with the fused cloud copied to <exp_folder>/<id>_dense.ply.
-        # Needs the CUDA colmap build (linux-64 in pixi.toml) and use_gpu=1; otherwise it is skipped
-        # with a warning and the run still succeeds (see Baselines/colmap/colmap_dense.sh).
+        # Needs the CUDA colmap build (linux-64 / win-64 in pixi.toml) and use_gpu=1; otherwise, or if a
+        # dense command fails, it is skipped with a warning and the run still succeeds (see
+        # Baselines/colmap/colmap_dense.py).
         # dense_max_image_size: longest image side used for undistortion / patch match / fusion
         # (COLMAP presets: 1000 low, 1600 medium, -1 high = full resolution).
-        # mesher: 'none' | 'delaunay' -> mesh the fused cloud, copied to <id>_mesh.ply (COLMAP's
-        # poisson_mesher is not offered: its surface trimmer segfaults in the 4.1.1 conda-forge build).
+        # mesher: 'none' | 'delaunay' | 'poisson' | 'advancing_front' -> mesh the fused cloud / dense
+        # workspace, copied to <id>_mesh.ply.
         default_parameters = {'verbose': 1, 'mode': 'mono', 'matcher_type': 'exhaustive',
                              'matching_type': 'sift_bruteforce', 'mapper_type': 'colmap', 'rgb_max': 50000000,
                              'use_mask': 0, 'optimize_intrinsics': 1,
@@ -44,27 +45,4 @@ class COLMAP_baseline(BaselineVSLAMLAB):
         self.color = (0.800, 0.400, 0.750)
         self.modes = ['mono']
         self.cam_models = ['unknown', 'pinhole', 'radtan4', 'radtan5', 'radtan8', 'equid4']
-        self.command_style = 'cpp'
-
-    def build_execute_command(self, exp_it: int, exp: 'Experiment', dataset: 'DatasetVSLAMLAB', sequence_name: str) -> str:
-        if 'matcher_type' in exp.parameters and exp.parameters['matcher_type'] == 'sequential':
-            self.colmap_download_bag_of_words()
-        return super().build_execute_command(exp_it, exp, dataset, sequence_name)
-
-    def fetch_source(self) -> None:
-        super().fetch_source()
-        if self.default_parameters['matcher_type'] == 'sequential':
-            self.colmap_download_bag_of_words()
-
-    def colmap_download_bag_of_words(self) -> None:
-        files = [
-            os.path.join(self.baseline_path, "vocab_tree_flickr100K_words1M.bin"),
-            os.path.join(self.baseline_path, "vocab_tree_flickr100K_words32K.bin"),
-            os.path.join(self.baseline_path, "vocab_tree_flickr100K_words256K.bin")
-        ]
-
-        for file in files:
-            file_name = os.path.basename(file)
-            if not os.path.exists(file):
-                print_msg(f"\n{SCRIPT_LABEL}", f"Download weights: {self.baseline_path}/{file}",'info')
-                _ = hf_hub_download(repo_id='vslamlab/colmap_vocabulary', filename=file_name, repo_type='model', local_dir=self.baseline_path)
+        self.command_style = 'python'
