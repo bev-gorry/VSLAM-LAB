@@ -159,11 +159,16 @@ def main() -> None:
 
     relay = start(relay_command, "relay", cwd=ARSTREAM_PATH)
     subscribers: list[tuple[subprocess.Popen, str]] = []
+    started = False
     try:
         if not wait_for_calibration(args.calibration_yaml, relay):
-            print_warning(f"No frame arrived from the phone within {CALIBRATION_TIMEOUT_S:g} s (is the ARStream app open?) - nothing started")
+            if relay.poll() is not None:
+                print_warning("The relay could not connect to the phone (see above) - nothing started")
+            else:
+                print_warning(f"No frame arrived from the phone within {CALIBRATION_TIMEOUT_S:g} s (is the ARStream app open?) - nothing started")
             return
         print_info(f"Calibration written: {args.calibration_yaml}")
+        started = True
 
         if args.view:
             subscribers.append((start(["pixi", "run", "--manifest-path", str(relay_runner.manifest), "--frozen", "view", "--sub",
@@ -186,7 +191,7 @@ def main() -> None:
         for process, name in subscribers:
             wait(process, name, SHUTDOWN_TIMEOUT_S)
             print_info(f"{name} finished ({process.returncode})")
-        if baseline_command is not None:
+        if baseline_command is not None and started:
             print_info(f"Results in {exp_folder}")
 
 
