@@ -152,6 +152,7 @@ download-dataset = "python vslamlab_gui.py download_dataset"
 synch-gt = "python Datasets/extra-files/synch_gt.py"
 sample-vpr = "python Datasets/extra-files/sample_vpr.py"
 record-iphone = "python Datasets/extra-files/record_iphone.py"   # iphone dataset: record a sequence from the ARStream app (see [feature.iphone])
+stream-iphone = "python Datasets/extra-files/stream_iphone.py"   # relay the ARStream app to ZeroMQ subscribers (online baselines, e.g. orbslam3-dev execute-mono-stream)
 label-sequences = "python Gym/label_sequences.py"
 select-sequences = "python Gym/select_sequences.py"
 
@@ -537,6 +538,9 @@ execute-stereo = { cmd = "pixi run --frozen execute-stereo", cwd = "Baselines/OR
 execute-mono-vi = { cmd = "pixi run --frozen execute-mono-vi", cwd = "Baselines/ORB-SLAM3-DEV" }
 execute-rgbd-vi = { cmd = "pixi run --frozen execute-rgbd-vi", cwd = "Baselines/ORB-SLAM3-DEV" }
 execute-stereo-vi = { cmd = "pixi run --frozen execute-stereo-vi", cwd = "Baselines/ORB-SLAM3-DEV" }
+# Online on an ARStream relay: `pixi run stream-iphone --run orbslam3-dev` starts the relay and this task together
+# (stream_url: calibration_yaml: exp_folder: [exp_id: settings_yaml: verbose: vocabulary:] when run by hand)
+execute-mono-stream = { cmd = "pixi run --frozen execute-mono-stream", cwd = "Baselines/ORB-SLAM3-DEV" }
 
 ########################################################################################################################
 # okvis2-dev

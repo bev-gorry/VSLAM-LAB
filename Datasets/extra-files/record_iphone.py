@@ -2,7 +2,7 @@
 Module: VSLAM-LAB - Datasets - extra-files - record_iphone.py
 - Author: Alejandro Fontan Villacampa
 - Assisted by: Claude (Fable 5.1)
-- Version: 1.0
+- Version: 1.1
 - Created: 2026-10-12
 - Updated: 2026-10-12
 - License: GPLv3 License
@@ -28,18 +28,15 @@ Datasets/sources/arstream, installed on first use); this script runs in the vsla
 
 import argparse
 import os
-import platform
-import shutil
 import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from Capabilities.CapabilityVSLAMLAB import CapabilityVSLAMLAB  # noqa: E402
+from arstream_tools import add_phone_args, arstream_task, launch_app, phone_args  # noqa: E402
 from Datasets.get_dataset import get_dataset  # noqa: E402
 from utilities import make_printers  # noqa: E402
 
@@ -49,13 +46,6 @@ print_info, print_warning = make_printers(SCRIPT_LABEL)
 DATASET_NAME = "iphone"
 DATASET_YAML = REPO_ROOT / "Datasets" / "dataset_files" / f"dataset_{DATASET_NAME}.yaml"
 FRAMES_FILE = "frames.jsonl"
-
-# The arstream repository: its pixi.toml carries the client's stack (opencv, rerun, zeroconf) and the
-# `record` / `view` / `ios-install` / `ios-launch` tasks; `record` takes the output folder plus the connection
-# flags. One runner per task this script calls (CapabilityVSLAMLAB runs its single task).
-ARSTREAM_PATH = REPO_ROOT / "Datasets" / "sources" / "arstream"
-ARSTREAM = CapabilityVSLAMLAB("arstream", "VSLAM-LAB/arstream", path=ARSTREAM_PATH, inference_task="record")
-ARSTREAM_LAUNCH = CapabilityVSLAMLAB("arstream", "VSLAM-LAB/arstream", path=ARSTREAM_PATH, inference_task="ios-launch")
 
 
 def register_sequence(sequence_name: str) -> bool:
@@ -90,33 +80,8 @@ def frame_count(sequence_path: Path) -> int:
         return sum(1 for line in f if line.strip())
 
 
-def launch_app(args: argparse.Namespace) -> None:
-    """Brings ARStream to the foreground on the USB phone before a USB recording (macOS with Xcode's
-    devicectl only). A failure (no phone, app not installed) is a warning: the connection attempt that
-    follows reports the actual problem."""
-    if args.no_launch or args.wifi or args.host:
-        return
-    if platform.system() != "Darwin" or shutil.which("xcrun") is None:
-        return
-    print_info("Bringing the ARStream app to the foreground on the phone ...")
-    try:
-        ARSTREAM_LAUNCH.run_args([])
-    except subprocess.CalledProcessError:
-        print_warning("Could not launch the ARStream app (see above) - open it on the phone yourself")
-        return
-    time.sleep(1.0)  # the listener comes up right after launch; a moment's margin before connecting
-
-
 def record(sequence_path: Path, args: argparse.Namespace) -> None:
-    forwarded = []
-    if args.wifi:
-        forwarded.append("--wifi")
-    if args.host:
-        forwarded += ["--host", args.host]
-    if args.port is not None:
-        forwarded += ["--port", str(args.port)]
-    if args.serial:
-        forwarded += ["--serial", args.serial]
+    forwarded = phone_args(args)
     if args.view:
         forwarded.append("--view")
     if args.duration is not None:
@@ -125,7 +90,7 @@ def record(sequence_path: Path, args: argparse.Namespace) -> None:
     # Ctrl-C reaches the whole foreground process group: arstream stops and closes its files on it,
     # and pixi may report that as a non-zero exit - what matters is whether frames were written.
     try:
-        ARSTREAM.run_args([str(sequence_path), *forwarded])
+        arstream_task("record").run_args([str(sequence_path), *forwarded])
     except (KeyboardInterrupt, subprocess.CalledProcessError):
         pass
 
@@ -134,14 +99,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("sequence_name", nargs="?", default=datetime.now().strftime("%Y%m%d_%H%M%S"),
                         help="name of the new sequence (default: YYYYMMDD_HHMMSS)")
-    parser.add_argument("--wifi", action="store_true", help="find the phone on Wi-Fi via Bonjour (default: USB)")
-    parser.add_argument("--host", help="phone IP for Wi-Fi (shown in the app)")
-    parser.add_argument("--port", type=int, help="port the app listens on (default: arstream's 5555)")
-    parser.add_argument("--serial", help="device serial/UDID if several phones are plugged in")
+    add_phone_args(parser)
     parser.add_argument("--view", action="store_true", help="also show the rerun viewer while recording")
     parser.add_argument("--duration", type=float, help="stop after this many seconds (default: until Ctrl-C)")
-    parser.add_argument("--no-launch", action="store_true",
-                        help="do not bring the app to the foreground on the phone before a USB recording (macOS)")
     args = parser.parse_args()
 
     dataset = get_dataset(DATASET_NAME)
