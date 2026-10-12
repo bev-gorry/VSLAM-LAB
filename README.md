@@ -149,6 +149,18 @@ pixi run compare <exp_yaml>                              # Example: pixi run com
 pixi run rerun-vis <dataset> <sequence>                  # Example: pixi run rerun-vis eth table_3 (Rerun viewer of a sequence)
 ```
 
+## Run a VSLAM system online from an iPhone
+The [ARStream](https://github.com/VSLAM-LAB/arstream) app streams RGB, intrinsics and ARKit's pose from an iPhone over USB or Wi-Fi. `record-iphone` turns a recording into a sequence of the `iphone` dataset (see the Tools table); `stream-iphone` relays the live stream over ZeroMQ so any number of subscribers (a baseline's `execute-mono-stream`, the viewer, your own Python/C++ code) consume it at once:
+
+```bash
+pixi run stream-iphone --run orbslam3-dev                # relay + ORB-SLAM3-DEV (or orbslam2-dev) online in one go: Ctrl-C stops the stream, the baseline saves ../VSLAM-LAB-Evaluation/stream_orbslam3-dev/00000_KeyFrameTrajectory.csv
+pixi run stream-iphone --run orbslam3-dev --view         # ... plus the Rerun viewer as another subscriber (--duration 30, --verbose 0, --exp-folder <dir> are also available)
+pixi run stream-iphone                                   # relay only: phone over USB (or --wifi / --host <ip>) -> tcp://*:5556, writes ../VSLAM-LAB-Benchmark/IPHONE/stream/calibration.yaml from the first frame
+pixi run view-iphone --sub                               # the Rerun viewer as a subscriber
+pixi run execute-mono-stream stream_url:tcp://localhost:5556 calibration_yaml:<abs path> exp_folder:<abs dir> settings_yaml:vslamlab_orbslam3-dev_settings.yaml   # a baseline's stream entry point by hand (runs inside Baselines/ORB-SLAM3-DEV)
+```
+Subscribers keep only the newest frame by default, so a system slower than the stream skips frames instead of lagging; the relay sends an end-of-stream message when it stops and the baseline then saves its `KeyFrameTrajectory.csv` as usual. A baseline joins `--run` by providing an `execute-<mode>-stream` entry point taking `stream_url:` instead of `sequence_path:`/`rgb_csv:` (see `BaselineVSLAMLAB.build_stream_command`). Writing a subscriber: `arstream.Subscriber` (Python) or `arstream/arstream.hpp` (C++, conda package `libarstream`), see the ARStream README.
+
 ## Add a new VSLAM Dataset
 
 Expand the evaluation suite by integrating custom datasets. If you're using Claude Code, run the [`add-dataset`](.claude/skills/add-dataset/SKILL.md) skill (`/add-dataset <name> <source>`) to walk through the full workflow end to end. Otherwise, follow the instructions in [Wiki: Integrate a new VSLAM Dataset](https://github.com/VSLAM-LAB/VSLAM-LAB/wiki/Integrate-a-new-VSLAM-Dataset).
@@ -282,6 +294,7 @@ To [awesome-slam-datasets](https://github.com/youngguncho/awesome-slam-datasets)
 | [**Pupil Labs Neon**](https://pupil-labs.com/) |  📸🥽 | `pupil-labs` | `mono(-vi)` | `pinhole` |
 | **Local video files** |  📸 | `videos` | `mono` | `pinhole` `unknown` |
 | [**YouTube videos**](https://www.youtube.com/) <br><sub>add one with the [`add-youtube-video`](.claude/skills/add-youtube-video/SKILL.md) skill</sub> |  📸 | `youtube` | `mono` | `pinhole` `radtan4` `unknown` |
+| [**iPhone (ARStream app)**](https://github.com/VSLAM-LAB/arstream) <br><sub>record one with `pixi run record-iphone [<sequence>]` (USB or `--wifi`); ARKit's VIO pose as groundtruth</sub> |  📸🤳 | `iphone` | `mono` | `pinhole` |
 <!-- | [**Underwater caves sonar and vision data set**](https://cirs.udg.edu/caves-dataset/)  |  📸🏞️🌊 |   `caves`  | `mono` | `pinhole` | -->
 <!-- | [**ScanNet++: A High-Fidelity Dataset of 3D Indoor Scenes**](https://scannetpp.mlsg.cit.tum.de/scannetpp/) |  📸🏠🤳 | `scannetplusplus` | `mono`| `pinhole` | -->
 <!-- [**Monocular Visual Odometry Dataset**](https://cvg.cit.tum.de/data/datasets/mono-dataset) | 📸🏠🤳 |  `monotum`  | `mono` | `pinhole` | -->
