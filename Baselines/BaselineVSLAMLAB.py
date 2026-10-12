@@ -164,6 +164,28 @@ class BaselineVSLAMLAB(ABC):
         tokens = [arg_format.format(key=key, value=shlex.quote(str(value))) for key, value in arguments.items()]
         return f"pixi run --frozen -e {self.baseline_name} execute-{mode} " + ' '.join(tokens)
 
+    def build_stream_command(self, mode: str, stream_url: str, calibration_yaml: Path, exp_folder: Path,
+                             exp_it: int = 0, overrides: dict | None = None) -> str:
+        """Command of the baseline's online entry point (pixi task execute-<mode>-stream, e.g. orbslam3-dev's
+        vslamlab_orbslam3_mono_stream on an ARStream relay, Datasets/extra-files/stream_iphone.py --run): the same
+        tokens as build_execute_command with stream_url: in place of sequence_path:/rgb_csv:, and the baseline's
+        default parameters (minus mode) with `overrides` applied."""
+        if self.command_style not in self._COMMAND_STYLES:
+            print_msg(SCRIPT_LABEL, f"{self.baseline_name} has command_style '{self.command_style}', expected one of {list(self._COMMAND_STYLES)}", flag="error", verb='NONE')
+            sys.exit(1)
+        arg_format, exp_it_key = self._COMMAND_STYLES[self.command_style]
+
+        arguments = {'stream_url': stream_url,
+                     'calibration_yaml': calibration_yaml,
+                     'exp_folder': exp_folder,
+                     exp_it_key: exp_it,
+                     'settings_yaml': self.settings_yaml}
+        arguments.update({name: value for name, value in self.default_parameters.items() if name != 'mode'})
+        arguments.update(overrides or {})
+
+        tokens = [arg_format.format(key=key, value=shlex.quote(str(value))) for key, value in arguments.items()]
+        return f"pixi run --frozen -e {self.baseline_name} execute-{mode}-stream " + ' '.join(tokens)
+
     ####################################################################################################################
     # Execute methods
     def kill_process(self, process):
