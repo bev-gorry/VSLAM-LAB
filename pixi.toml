@@ -521,6 +521,8 @@ install = { cmd = "pixi run install", cwd = "Baselines/ORB-SLAM2-DEV" }
 execute-mono = { cmd = "pixi run --frozen execute-mono", cwd = "Baselines/ORB-SLAM2-DEV" }
 execute-rgbd = { cmd = "pixi run --frozen execute-rgbd", cwd = "Baselines/ORB-SLAM2-DEV" }
 execute-stereo = { cmd = "pixi run --frozen execute-stereo", cwd = "Baselines/ORB-SLAM2-DEV" }
+# Online on an ARStream relay: `pixi run stream-iphone --run orbslam2-dev` starts the relay and this task together
+execute-mono-stream = { cmd = "pixi run --frozen execute-mono-stream", cwd = "Baselines/ORB-SLAM2-DEV" }
 
 ########################################################################################################################
 # orbslam3-dev

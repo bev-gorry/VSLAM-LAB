@@ -153,7 +153,7 @@ pixi run rerun-vis <dataset> <sequence>                  # Example: pixi run rer
 The [ARStream](https://github.com/VSLAM-LAB/arstream) app streams RGB, intrinsics and ARKit's pose from an iPhone over USB or Wi-Fi. `record-iphone` turns a recording into a sequence of the `iphone` dataset (see the Tools table); `stream-iphone` relays the live stream over ZeroMQ so any number of subscribers (a baseline's `execute-mono-stream`, the viewer, your own Python/C++ code) consume it at once:
 
 ```bash
-pixi run stream-iphone --run orbslam3-dev                # relay + ORB-SLAM3-DEV online in one go: Ctrl-C stops the stream, the baseline saves ../VSLAM-LAB-Evaluation/stream_orbslam3-dev/00000_KeyFrameTrajectory.csv
+pixi run stream-iphone --run orbslam3-dev                # relay + ORB-SLAM3-DEV (or orbslam2-dev) online in one go: Ctrl-C stops the stream, the baseline saves ../VSLAM-LAB-Evaluation/stream_orbslam3-dev/00000_KeyFrameTrajectory.csv
 pixi run stream-iphone --run orbslam3-dev --view         # ... plus the Rerun viewer as another subscriber (--duration 30, --verbose 0, --exp-folder <dir> are also available)
 pixi run stream-iphone                                   # relay only: phone over USB (or --wifi / --host <ip>) -> tcp://*:5556, writes ../VSLAM-LAB-Benchmark/IPHONE/stream/calibration.yaml from the first frame
 pixi run view-iphone --sub                               # the Rerun viewer as a subscriber
