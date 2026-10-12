@@ -279,6 +279,7 @@ fetch-source = "./git-clone.sh https://huggingface.co/vslamlab/orbslam2-vslamlab
 execute-mono = 'vslamlab_orbslam2_mono'
 execute-rgbd = 'vslamlab_orbslam2_rgbd'
 execute-stereo = 'vslamlab_orbslam2_stereo'
+execute-mono-stream = 'vslamlab_orbslam2_mono_stream'   # online on an ARStream relay: `pixi run stream-iphone --run orbslam2`
 
 [feature.orbslam2.dependencies]
 orbslam2 = { version = "*", channel = "https://prefix.dev/vslamlab/vslamlab" }
@@ -362,6 +363,7 @@ execute-stereo = 'vslamlab_orbslam3_stereo'
 execute-mono-vi = 'vslamlab_orbslam3_mono_vi'
 execute-rgbd-vi = 'vslamlab_orbslam3_rgbd_vi'
 execute-stereo-vi = 'vslamlab_orbslam3_stereo_vi'
+execute-mono-stream = 'vslamlab_orbslam3_mono_stream'   # online on an ARStream relay: `pixi run stream-iphone --run orbslam3`
 
 [feature.orbslam3.dependencies]
 orbslam3 = { version = "*", channel = "https://prefix.dev/vslamlab/vslamlab" }
