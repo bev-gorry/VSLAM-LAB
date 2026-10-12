@@ -17,6 +17,7 @@ from path_constants import VSLAM_LAB_EVALUATION_FOLDER, VSLAMLAB_EVALUATION
 from Baselines.get_baseline import get_baseline
 from Datasets.get_dataset import get_dataset
 from utilities import read_csv
+from Evaluate import plot_utilities
 from Evaluate.plot_utilities import get_experiment_colors, style_axis, get_legend_handles, style_figure
 
 import matplotlib.ticker as ticker
@@ -188,7 +189,7 @@ def plot_trajectories(dataset_sequences, exp_names,
             i_traj = i_traj + 1
     #fig.legend(handles=legend_handles, loc='lower center', ncol=len(legend_handles))
     plt.subplots_adjust(bottom=0.3)
-    plt.show(block=False)
+    plot_utilities.show(block=False)
     plt.savefig(plot_name, format='pdf')
 
 
@@ -350,7 +351,7 @@ def boxplot_exp_seq(values, dataset_sequences, metric_name, comparison_path, exp
         fig.canvas.manager.set_window_title("Accuracy (shared scale)")
     else:
         fig.canvas.manager.set_window_title("Accuracy")
-    plt.show(block=False)
+    plot_utilities.show(block=False)
 
 def radar_seq(values, dataset_sequences, exp_names, dataset_nicknames, metric_name, comparison_path, experiments):
     MAX_VALUE = 0.05
@@ -540,7 +541,7 @@ def radar_seq(values, dataset_sequences, exp_names, dataset_nicknames, metric_na
 #     ncol=len(legend_handles),
 #     frameon=False
 # )
-    plt.show(block=False)
+    plot_utilities.show(block=False)
 
 
 def plot_cum_error(values, dataset_sequences, exp_names, metric_name, comparison_path, experiments, num_fractions=10):
@@ -599,7 +600,7 @@ def plot_cum_error(values, dataset_sequences, exp_names, metric_name, comparison
 
     plot_name = os.path.join(comparison_path, f"{metric_name}_cummulated_error.pdf")
     plt.savefig(plot_name, format='pdf', bbox_inches='tight')
-    plt.show(block=False)
+    plot_utilities.show(block=False)
 
 def create_and_show_canvas(dataset_sequences, VSLAMLAB_BENCHMARK, comparison_path, padding=10):
     image_paths = []
@@ -644,7 +645,7 @@ def create_and_show_canvas(dataset_sequences, VSLAMLAB_BENCHMARK, comparison_pat
     plt.figure(figsize=(12.8, 6.4))  # Convert pixels to inches for display
     plt.imshow(canvas)
     plt.axis('off')  # Hide the axis
-    plt.show(block=False)
+    plot_utilities.show(block=False)
 
 def num_tracked_frames(values, dataset_sequences, figures_path, experiments, shared_scale=False):
     # Get number of sequences
@@ -774,7 +775,7 @@ def num_tracked_frames(values, dataset_sequences, figures_path, experiments, sha
     plt.savefig(plot_name, format='pdf')
 
     fig.canvas.manager.set_window_title("Number of Frames")
-    plt.show(block=False)
+    plot_utilities.show(block=False)
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -1392,7 +1393,7 @@ def running_time(figures_path, experiments, sequence_nicknames):
     plot_table_time_total(axs[1], experiments, 'TIME', title='Total Processing Time (s)',
                figures_path=figures_path, sequence_nicknames= sequence_nicknames)
     plt.tight_layout()
-    plt.show()
+    plot_utilities.show()
     #table = axs[0].table(cellText=pivot.values, colLabels=pivot.columns, loc='center', cellLoc='center')
     ...
 
@@ -1418,7 +1419,7 @@ def plot_memory(figures_path, experiments, sequence_nicknames):
     #            figures_path=figures_path, sequence_nicknames= sequence_nicknames)
 
     plt.tight_layout()
-    plt.show()
+    plot_utilities.show()
     #table = axs[0].table(cellText=pivot.values, colLabels=pivot.columns, loc='center', cellLoc='center')
     ...
 

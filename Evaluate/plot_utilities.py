@@ -1,8 +1,29 @@
+import os
+
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
 from Baselines.get_baseline import get_baseline
+
+# VSLAMLAB_HEADLESS=1 (or true/yes): the evaluation and comparison figures are only written to disk
+# (every plot already calls savefig) and never shown, so `pixi run vslamlab`/`compare` return without
+# anyone closing matplotlib windows -- for unattended runs and machines without a display.
+# vslamlab_gui.py also selects the Agg backend in that case, before matplotlib is imported.
+HEADLESS_ENV = "VSLAMLAB_HEADLESS"
+
+
+def headless() -> bool:
+    return os.environ.get(HEADLESS_ENV, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def show(block: bool = True) -> None:
+    """plt.show(block=block), or plt.close('all') when headless (the figures are already saved)."""
+    if headless():
+        plt.close('all')
+    else:
+        plt.show(block=block)
 
 def _shade_color(rgb, factor):
     """Tint (factor > 0, toward white) or shade (factor < 0, toward black) an RGB color."""

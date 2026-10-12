@@ -1,5 +1,10 @@
 import os, sys
 
+# VSLAMLAB_HEADLESS=1: evaluation/comparison figures are saved but never shown (Evaluate/plot_utilities.py),
+# and matplotlib uses the non-interactive Agg backend -- selected here, before anything imports matplotlib.
+if os.environ.get("VSLAMLAB_HEADLESS", "").strip().lower() in ("1", "true", "yes", "on"):
+    os.environ.setdefault("MPLBACKEND", "Agg")
+
 from vslamlab_utilities import baseline_info, print_datasets, print_baselines, validate_experiment_yaml, overwrite_exp
 from vslamlab_utilities import update_experiment_csv_logs, check_experiment_resources, get_experiment_resources, check_experiment_state
 from vslamlab_utilities import install_baseline, install_baselines, download_sequence, download_sequences, download_dataset, download_datasets
