@@ -130,7 +130,9 @@ def main() -> None:
             sys.exit(f"{SCRIPT_LABEL}{args.run} is {message}: run 'pixi run install-baseline {args.run}' first")
         if not has_pixi_task(args.run, f"execute-{args.mode}-stream"):
             sys.exit(f"{SCRIPT_LABEL}{args.run} has no execute-{args.mode}-stream task in pixi.toml (no online {args.mode} entry point)")
-        exp_folder = (args.exp_folder or VSLAMLAB_EVALUATION / f"stream_{args.run}").resolve()
+        # mono runs keep the stream_<baseline> folder of before; other modes get their own (stream_<baseline>_rgbd)
+        default_folder = f"stream_{args.run}" + ("" if args.mode == "mono" else f"_{args.mode}")
+        exp_folder = (args.exp_folder or VSLAMLAB_EVALUATION / default_folder).resolve()
         exp_folder.mkdir(parents=True, exist_ok=True)
         overrides = {} if args.verbose is None else {"verbose": args.verbose}
         baseline_command = baseline.build_stream_command(args.mode, subscriber_url(args.bind), args.calibration_yaml.resolve(),
@@ -168,6 +170,10 @@ def main() -> None:
                 print_warning(f"No frame arrived from the phone within {CALIBRATION_TIMEOUT_S:g} s (is the ARStream app open?) - nothing started")
             return
         print_info(f"Calibration written: {args.calibration_yaml}")
+        if args.mode == "rgbd" and "rgb+depth" not in args.calibration_yaml.read_text(encoding="utf-8"):
+            print_warning("The phone streams no depth (not a LiDAR phone, or Depth off in the app): an rgbd run needs it "
+                          "- use --mode mono")
+            return
         started = True
 
         if args.view:

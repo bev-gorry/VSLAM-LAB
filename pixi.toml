@@ -280,6 +280,7 @@ execute-mono = 'vslamlab_orbslam2_mono'
 execute-rgbd = 'vslamlab_orbslam2_rgbd'
 execute-stereo = 'vslamlab_orbslam2_stereo'
 execute-mono-stream = 'vslamlab_orbslam2_mono_stream'   # online on an ARStream relay: `pixi run stream-iphone --run orbslam2`
+execute-rgbd-stream = 'vslamlab_orbslam2_rgbd_stream'   # ... --mode rgbd (LiDAR phone)
 
 [feature.orbslam2.dependencies]
 orbslam2 = { version = "*", channel = "https://prefix.dev/vslamlab/vslamlab" }
@@ -364,6 +365,7 @@ execute-mono-vi = 'vslamlab_orbslam3_mono_vi'
 execute-rgbd-vi = 'vslamlab_orbslam3_rgbd_vi'
 execute-stereo-vi = 'vslamlab_orbslam3_stereo_vi'
 execute-mono-stream = 'vslamlab_orbslam3_mono_stream'   # online on an ARStream relay: `pixi run stream-iphone --run orbslam3`
+execute-rgbd-stream = 'vslamlab_orbslam3_rgbd_stream'   # ... --mode rgbd (LiDAR phone)
 
 [feature.orbslam3.dependencies]
 orbslam3 = { version = "*", channel = "https://prefix.dev/vslamlab/vslamlab" }
@@ -525,6 +527,7 @@ execute-rgbd = { cmd = "pixi run --frozen execute-rgbd", cwd = "Baselines/ORB-SL
 execute-stereo = { cmd = "pixi run --frozen execute-stereo", cwd = "Baselines/ORB-SLAM2-DEV" }
 # Online on an ARStream relay: `pixi run stream-iphone --run orbslam2-dev` starts the relay and this task together
 execute-mono-stream = { cmd = "pixi run --frozen execute-mono-stream", cwd = "Baselines/ORB-SLAM2-DEV" }
+execute-rgbd-stream = { cmd = "pixi run --frozen execute-rgbd-stream", cwd = "Baselines/ORB-SLAM2-DEV" }
 
 ########################################################################################################################
 # orbslam3-dev
@@ -545,6 +548,7 @@ execute-stereo-vi = { cmd = "pixi run --frozen execute-stereo-vi", cwd = "Baseli
 # Online on an ARStream relay: `pixi run stream-iphone --run orbslam3-dev` starts the relay and this task together
 # (stream_url: calibration_yaml: exp_folder: [exp_id: settings_yaml: verbose: vocabulary:] when run by hand)
 execute-mono-stream = { cmd = "pixi run --frozen execute-mono-stream", cwd = "Baselines/ORB-SLAM3-DEV" }
+execute-rgbd-stream = { cmd = "pixi run --frozen execute-rgbd-stream", cwd = "Baselines/ORB-SLAM3-DEV" }
 
 ########################################################################################################################
 # okvis2-dev

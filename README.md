@@ -156,6 +156,7 @@ The [ARStream](https://github.com/VSLAM-LAB/arstream) app streams RGB, intrinsic
 ```bash
 pixi run stream-iphone --run orbslam3-dev                # relay + ORB-SLAM3-DEV (or orbslam2-dev) online in one go: Ctrl-C stops the stream, the baseline saves ../VSLAM-LAB-Evaluation/stream_orbslam3-dev/00000_KeyFrameTrajectory.csv
 pixi run stream-iphone --run orbslam3-dev --view         # ... plus the Rerun viewer as another subscriber (--duration 30, --verbose 0, --exp-folder <dir> are also available)
+pixi run stream-iphone --run orbslam2 --mode rgbd        # LiDAR phone: RGB-D online with ARKit's depth (orbslam2/orbslam3 and their -dev variants), results in ../VSLAM-LAB-Evaluation/stream_orbslam2_rgbd
 pixi run stream-iphone                                   # relay only: phone over USB (or --wifi / --host <ip>) -> tcp://*:5556, writes ../VSLAM-LAB-Benchmark/IPHONE/stream/calibration.yaml from the first frame
 pixi run view-iphone --sub                               # the Rerun viewer as a subscriber
 pixi run execute-mono-stream stream_url:tcp://localhost:5556 calibration_yaml:<abs path> exp_folder:<abs dir> settings_yaml:vslamlab_orbslam3-dev_settings.yaml   # a baseline's stream entry point by hand (runs inside Baselines/ORB-SLAM3-DEV)
