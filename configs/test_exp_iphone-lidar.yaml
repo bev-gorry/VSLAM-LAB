@@ -1,0 +1,11 @@
+test_exp_iphone_lidar_orbslam2_rgbd:
+  Config: test_config_iphone-lidar.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, mode: rgbd}
+  Module: orbslam2
+
+test_exp_iphone_lidar_orbslam3_mono:
+  Config: test_config_iphone-lidar.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, mode: mono}
+  Module: orbslam3

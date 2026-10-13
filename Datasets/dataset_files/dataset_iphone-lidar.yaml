@@ -1,0 +1,50 @@
+dataset_name: iphone-lidar
+
+# ARKit's nominal frame rate (the app streams at 30 fps by default, 10/60 selectable). rgb.csv takes every frame's
+# real timestamp from frames.jsonl, so this value is only the nominal fps written to calibration.yaml.
+rgb_hz: 30.0
+modes: ['mono', 'rgbd']
+# ARKit hands out the ISP-rectified image with a pinhole intrinsics matrix and no distortion model; the app rescales K
+# to the streamed resolution, so calibration.yaml writes it as is.
+cam_models: ['pinhole']
+raw_formats: ['images']
+
+# All sequences are user-recorded with `pixi run record-iphone --lidar [<sequence_name>]` on a LiDAR iPhone (Pro models):
+# the ARStream app (github.com/VSLAM-LAB/arstream) streams RGB + intrinsics + ARKit pose + ARKit's sceneDepth (16-bit PNG
+# in millimetres at its native 256x192, with a confidence map), the raw recording (rgb/, depth/, confidence/,
+# frames.jsonl, ...) lands in VSLAM-LAB-Benchmark/IPHONE-LIDAR/<sequence_name>/ and the sequence name is appended to
+# sequence_names below. A recording made with `arstream record` on another machine can be dropped in the same place.
+sequence_location: local
+
+# depth_0/ is the LiDAR depth upsampled (nearest neighbour) to the RGB resolution; depth in meters = value / depth_factor.
+depth_factor: 1000.0
+# ARKit confidence levels: 0 low, 1 medium, 2 high. Depth pixels below this level are set to 0 (invalid) in depth_0/.
+min_confidence: 1
+
+# No target_resolution: the app streams 640x480 (set once in the app) and the phone's JPEGs go into rgb_0/ untouched.
+
+# sequence_name = the recording's folder name (record-iphone defaults it to YYYYMMDD_HHMMSS).
+sequence_names:
+  - desk_lidar_20261013
+
+about:
+  license: N/A (user-recorded data)
+  summary: LiDAR iPhone recordings streamed by the ARStream app - RGB, ARKit sceneDepth (256x192, confidence-masked) and ARKit's visual-inertial pose, the latter as a drifting (not metrological) groundtruth
+  homepage: https://github.com/VSLAM-LAB/arstream
+  features:
+    - Real
+    - Handheld
+  authors:
+    - Alejandro Fontan
+  access: N/A
+  publication: N/A
+  publication_url: N/A
+  year: N/A
+  bibtex_key: N/A
+  bibtex: N/A
+
+vslamlab_maintainer:
+  name: Alejandro Fontan
+  assisted_by: Claude (Fable 5.1)
+  email: alejandro.fontan@qut.edu.au
+  date: 2026-10-13
