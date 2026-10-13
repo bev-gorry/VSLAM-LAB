@@ -89,6 +89,7 @@ To **run** the experiment demo, execute the following command:
 ```bash
 pixi run vslamlab configs/exp_vslamlab.yaml              # resumes: runs already done are kept
 pixi run vslamlab configs/exp_vslamlab.yaml --overwrite  # deletes the previous results first
+VSLAMLAB_HEADLESS=1 pixi run vslamlab configs/exp_vslamlab.yaml  # unattended: figures are saved, no plot windows open
 ```
 
 Experiments in **VSLAM-LAB** are sequences of entries in a YAML file (see example **configs/exp_vslamlab.yaml**):
