@@ -47,6 +47,7 @@ orbslam2 = { features = ["orbslam2"], solve-group = "orb" }
 anyfeature = { features = ["anyfeature"], solve-group = "anyfeature" }
 allfeature = { features = ["allfeature"] }
 colmap = { features = ["colmap"], solve-group = "colmap" }
+colmap-lightglue = { features = ["colmap-lightglue"], solve-group = "colmap-lightglue" }
 orbslam3 = { features = ["orbslam3"], solve-group = "orb" }
 okvis2 = { features = ["okvis2"], solve-group = "okvis" }
 pycuvslam = { features = ["pycuvslam","cuda126", "py10"] }
@@ -332,7 +333,8 @@ channels = ["https://prefix.dev/conda-forge"]
 platforms = ["linux-64-cuda129", "osx-arm64-cuda129", "win-64-cuda129"]
 
 [feature.colmap.tasks]
-fetch-source = { cmd = 'git clone https://github.com/VSLAM-LAB/COLMAP-VSLAM-LAB colmap', cwd = 'Baselines' }
+# Fork: the hybrid matcher lives on a branch of the COLMAP-VSLAM-LAB fork
+fetch-source = { cmd = 'git clone -b hybrid https://github.com/bev-gorry/COLMAP-VSLAM-LAB colmap', cwd = 'Baselines' }
 execute-mono = 'python Baselines/colmap/vslamlab_colmap.py'
 # Pre-warm COLMAP's download cache (~/.cache/colmap: ALIKED / LightGlue / LoMa ONNX models and the FAISS vocabulary
 # trees for sequential loop detection) before running on nodes without internet; COLMAP fetches on demand otherwise.
@@ -359,6 +361,34 @@ colmap = "=4.2.1"
 
 [feature.colmap.target.win-64.dependencies]
 colmap = {version="=4.2.1", build = "*cuda*" }
+
+########################################################################################################################
+########################################################################################################################
+# colmap-lightglue: torch + LightGlue for the colmap baseline's hybrid matcher
+# (Baselines/colmap/hybrid_matcher.py, matcher_type: hybrid), run as a subprocess of the colmap env.
+# Versions are pinned to the original hybrid pipeline's lightglue env (python 3.11, pytorch 2.7.1
+# cuda126, numpy 1.26.4, kornia 0.8.2, LightGlue eb42fee) so its results stay reproducible. LightGlue is installed with --no-deps so pip never replaces the conda torch/opencv.
+[feature.colmap-lightglue]
+channels = ["https://prefix.dev/conda-forge"]
+platforms = ["linux-64-cuda"]
+
+[feature.colmap-lightglue.tasks]
+fetch-lightglue = { cmd = "[ -d Baselines/LightGlue/.git ] || (git clone https://github.com/cvg/LightGlue.git Baselines/LightGlue && git -C Baselines/LightGlue checkout eb42fee2d71449efb0aa5c10549752b5d75384d8)" }
+install-lightglue = { cmd = "python -c 'import lightglue' 2>/dev/null || python -m pip install --no-deps --no-build-isolation -e Baselines/LightGlue", depends-on = ["fetch-lightglue"] }
+
+[feature.colmap-lightglue.dependencies]
+python = "3.11.*"
+pytorch-gpu = "==2.7.1"
+cuda-version = "12.6.*"
+torchvision = "*"
+numpy = "==1.26.4"
+kornia = "==0.8.2"
+opencv = "*"
+matplotlib-base = "*"
+pandas = "*"
+tqdm = "*"
+pip = "*"
+setuptools = "*"
 
 ########################################################################################################################
 ########################################################################################################################

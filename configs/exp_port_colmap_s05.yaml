@@ -1,0 +1,14 @@
+# Hybrid matching + off-the-shelf COLMAP on sskall-s05 (all 740 frames).
+# Same as exp_port_repro_s05.yaml except the two settings that make it "plain COLMAP":
+#   verification: colmap  -> COLMAP's geometric_verifier with its default settings (no GLOMAP imitation)
+#   mapper_type: colmap   -> COLMAP's incremental mapper (instead of the global mapper)
+# Everything else keeps the original pipeline's settings: one shared camera, the original MegaLoc matrix
+# (D.npy, rows = rgb.csv) with threshold 0.55, LightGlue kept if > 40 matches, pairs kept if >= 10 matches.
+exp_port_colmap_s05:
+  Config: config_ssk05_ours.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               single_camera_per_folder: 0, random_seed: 0,
+               pair_selection: vpr, vpr_matrix: D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap}
+  Module: colmap

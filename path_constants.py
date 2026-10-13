@@ -3,13 +3,13 @@ import sys
 from enum import Enum
 from pathlib import Path
 
-HUGGINGFACE_TOKEN = None
+HUGGINGFACE_TOKEN = os.environ.get('HUGGINGFACE_TOKEN')
 
 VSLAM_LAB_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 VSLAM_LAB_PATH = Path(os.path.dirname(VSLAM_LAB_DIR))
 
-VSLAMLAB_BENCHMARK = VSLAM_LAB_PATH / "VSLAM-LAB-Benchmark"
-VSLAMLAB_EVALUATION = VSLAM_LAB_PATH / 'VSLAM-LAB-Evaluation'
+VSLAMLAB_BENCHMARK = Path("/run/media/beverley/beverley_t7/VSLAM-LAB-Benchmark")
+VSLAMLAB_EVALUATION = Path("/run/media/beverley/beverley_t7/VSLAM-LAB-Evaluation")
 VSLAMLAB_BASELINES = VSLAM_LAB_DIR / 'Baselines'
 VSLAMLAB_VIDEOS = VSLAMLAB_BENCHMARK / 'VIDEOS'
 

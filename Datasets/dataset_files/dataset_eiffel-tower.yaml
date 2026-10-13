@@ -5,19 +5,68 @@ modes: ['mono']
 cam_models: ['radtan4']
 raw_formats: ['zip']
 
+# One archive per campaign. Each unpacks into a folder named after its year (e.g. 2018/), which is
+# renamed to the sequence name (eff18) after extraction.
 url_download_root:
-  '2015': "https://www.seanoe.org/data/00810/92226/data/98240.zip"
-  '2016': "https://www.seanoe.org/data/00810/92226/data/98289.zip"
-  '2018': "https://www.seanoe.org/data/00810/92226/data/98314.zip"
-  '2020': "https://www.seanoe.org/data/00810/92226/data/98356.zip"
+  eff15: "https://www.seanoe.org/data/00810/92226/data/98240.zip"
+  eff16: "https://www.seanoe.org/data/00810/92226/data/98289.zip"
+  eff18: "https://www.seanoe.org/data/00810/92226/data/98314.zip"
+  eff20: "https://www.seanoe.org/data/00810/92226/data/98356.zip"
 
 target_resolution: [640, 480]
 
 sequence_names:
-  - '2015'
-  - '2016'
-  - '2018'
-  - '2020'
+  - eff15
+  - eff16
+  - eff18
+  - eff20
+  - eff15-s01
+  - eff16-s01
+  - eff18-s01
+  - eff20-s01
+  - effall-s01
+  - eff16-s02
+  - eff18-s02
+  - eff20-s02
+  - effall-s02
+  - eff15-s15
+  - eff16-s15
+  - eff18-s15
+  - effall-s15
+  - eff16-full
+  - eff18-full
+  - eff20-full
+  - effall-full
+
+# Sequences derived from already-processed ones (built by symlinking frames, no re-download).
+# subsets: frames of a parent sequence within a radius of an anchor image, measured on the
+#          groundtruth positions (the campaign's sfm poses).
+#          [parent sequence, anchor image path, radius in metres]
+subsets:
+  eff15-s01: [eff15, "rgb_0/20150419T032932.000Z.png", 8.0]
+  eff16-s01: [eff16, "rgb_0/20160910T075434.000Z.png", 8.0]
+  eff18-s01: [eff18, "rgb_0/20180816T062805.000Z.png", 8.0]
+  eff20-s01: [eff20, "rgb_0/20200918T072258.000Z.png", 8.0]
+
+  eff16-s02: [eff16, "rgb_0/20160910T075434.000Z.png", 10.0]
+  eff18-s02: [eff18, "rgb_0/20180816T062805.000Z.png", 10.0]
+  eff20-s02: [eff20, "rgb_0/20200918T072258.000Z.png", 10.0]
+
+  eff15-s15: [eff15, "rgb_0/20150419T041611.000Z.png", 15.0]
+  eff16-s15: [eff16, "rgb_0/20160910T102708.000Z.png", 15.0]
+  eff18-s15: [eff18, "rgb_0/20180817T215153.000Z.png", 15.0]
+
+  eff16-full: [eff16, "rgb_0/20160910T075434.000Z.png", 40.0]
+  eff18-full: [eff18, "rgb_0/20180816T062805.000Z.png", 40.0]
+  eff20-full: [eff20, "rgb_0/20200918T072258.000Z.png", 40.0]
+
+# combined: several sequences concatenated in the listed order (one multi-session sequence). Uses
+#           the first listed sequence's calibration.
+combined:
+  effall-s01: [eff16-s01, eff18-s01, eff20-s01]
+  effall-s02: [eff16-s02, eff18-s02, eff20-s02]
+  effall-s15: [eff15-s15, eff16-s15, eff18-s15]
+  effall-full: [eff16-full, eff18-full, eff20-full]
 
 about:
   license: CC-BY-NC-ND-4.0
