@@ -2566,8 +2566,8 @@ environments:
       - conda: https://prefix.dev/conda-forge/noarch/fonts-conda-ecosystem-1-0.tar.bz2
       - conda: https://prefix.dev/conda-forge/noarch/fonts-conda-forge-1-hc364b38_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/wayland-protocols-1.49-hd8ed1ab_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/libarstream-0.2.0-ha35fb5c_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam2-1.2-ha35fb5c_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/libarstream-0.2.1-ha35fb5c_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam2-1.3-ha35fb5c_0.conda
       osx-arm64:
       - conda: https://prefix.dev/conda-forge/noarch/ca-certificates-2026.7.22-hbd8a1cb_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2
@@ -2721,8 +2721,8 @@ environments:
       - conda: https://prefix.dev/conda-forge/osx-arm64/yaml-cpp-0.8.0-h784d473_1.conda
       - conda: https://prefix.dev/conda-forge/osx-arm64/zeromq-4.3.5-h6eb0046_12.conda
       - conda: https://prefix.dev/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/libarstream-0.2.0-hea27dcd_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam2-1.2-hea27dcd_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/libarstream-0.2.1-hea27dcd_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam2-1.3-hea27dcd_0.conda
       win-64:
       - conda: https://prefix.dev/conda-forge/noarch/ca-certificates-2026.7.22-h4c7d964_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2
@@ -2861,8 +2861,8 @@ environments:
       - conda: https://prefix.dev/conda-forge/win-64/yaml-cpp-0.8.0-h5112557_1.conda
       - conda: https://prefix.dev/conda-forge/win-64/zeromq-4.3.5-h3a581c9_12.conda
       - conda: https://prefix.dev/conda-forge/win-64/zstd-1.5.7-h534d264_7.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/libarstream-0.2.0-h659f713_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam2-1.2-h659f713_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/libarstream-0.2.1-h659f713_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam2-1.3-h659f713_0.conda
   orbslam2-dev:
     channels:
     - url: https://prefix.dev/conda-forge/
@@ -3080,8 +3080,8 @@ environments:
       - conda: https://prefix.dev/conda-forge/noarch/fonts-conda-ecosystem-1-0.tar.bz2
       - conda: https://prefix.dev/conda-forge/noarch/fonts-conda-forge-1-hc364b38_1.conda
       - conda: https://prefix.dev/conda-forge/noarch/wayland-protocols-1.49-hd8ed1ab_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/libarstream-0.2.0-ha35fb5c_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam3-1.3-ha35fb5c_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/libarstream-0.2.1-ha35fb5c_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam3-1.4-ha35fb5c_0.conda
       osx-arm64:
       - conda: https://prefix.dev/conda-forge/noarch/ca-certificates-2026.7.22-hbd8a1cb_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2
@@ -3236,8 +3236,8 @@ environments:
       - conda: https://prefix.dev/conda-forge/osx-arm64/yaml-cpp-0.8.0-h784d473_1.conda
       - conda: https://prefix.dev/conda-forge/osx-arm64/zeromq-4.3.5-h6eb0046_12.conda
       - conda: https://prefix.dev/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/libarstream-0.2.0-hea27dcd_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam3-1.3-hea27dcd_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/libarstream-0.2.1-hea27dcd_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam3-1.4-hea27dcd_0.conda
       win-64:
       - conda: https://prefix.dev/conda-forge/noarch/ca-certificates-2026.7.22-h4c7d964_0.conda
       - conda: https://prefix.dev/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2
@@ -3377,8 +3377,8 @@ environments:
       - conda: https://prefix.dev/conda-forge/win-64/yaml-cpp-0.8.0-h5112557_1.conda
       - conda: https://prefix.dev/conda-forge/win-64/zeromq-4.3.5-h3a581c9_12.conda
       - conda: https://prefix.dev/conda-forge/win-64/zstd-1.5.7-h534d264_7.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/libarstream-0.2.0-h659f713_0.conda
-      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam3-1.3-h659f713_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/libarstream-0.2.1-h659f713_0.conda
+      - conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam3-1.4-h659f713_0.conda
   orbslam3-dev:
     channels:
     - url: https://prefix.dev/conda-forge/
@@ -47070,9 +47070,9 @@ packages:
   run_exports: {}
   size: 611594
   timestamp: 1791402075136
-- conda: https://prefix.dev/vslamlab/vslamlab/linux-64/libarstream-0.2.0-ha35fb5c_0.conda
-  sha256: f4cf0886ef87d0481796cb316e0f2465be6060b27e63ebcf33ca5ce74b229531
-  md5: 6a45bb05e3ef8467cd04d144afd380e8
+- conda: https://prefix.dev/vslamlab/vslamlab/linux-64/libarstream-0.2.1-ha35fb5c_0.conda
+  sha256: 994485f5b957de0e19785c49faf991029526a5f0771d22ef66fbb39a62b50fe0
+  md5: 9007240f83734d9c033ade469cc3f6ca
   depends:
   - cppzmq
   - zeromq
@@ -47084,8 +47084,8 @@ packages:
   - __glibc >=2.28,<3.0.a0
   license: GPL-3.0-only
   run_exports: {}
-  size: 60617
-  timestamp: 1791884750379
+  size: 60741
+  timestamp: 1791889479236
 - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/lietorch-1.0.2-py311he38a381_0.conda
   sha256: 69357340a74f73536842fa8bf283e417ea0bf5589a8ae07dbe21c3d0fe2a5dea
   md5: 7481f435fddad2837f3d56b0d004bf73
@@ -47185,13 +47185,13 @@ packages:
   run_exports: {}
   size: 2543066
   timestamp: 1791545953078
-- conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam2-1.2-ha35fb5c_0.conda
-  sha256: ef7fdca2e44b46700ca7c8a3f79cbe1af19694544c2743d0c21fb4558feb2bdc
-  md5: dfdd6e03254756080831329a182cca14
+- conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam2-1.3-ha35fb5c_0.conda
+  sha256: fc8b126449cd1cbfcee468864deb51b7c476bf2c9be0a648f47a179ade9cf9e2
+  md5: c85e7a1738afb30b7bb32d7b5986570e
   depends:
   - pangolin-opengl
   - pangolin-opengl >=0.9.6,<0.10.0a0
-  - libarstream >=0.2[channel="https://prefix.dev/vslamlab/vslamlab/"]
+  - libarstream >=0.2.1[channel="https://prefix.dev/vslamlab/vslamlab/"]
   - libstdcxx >=16
   - libgcc >=16
   - __glibc >=2.28,<3.0.a0
@@ -47201,15 +47201,15 @@ packages:
   - libopengl >=1.7.0,<2.0a0
   license: GPL-3.0-only
   run_exports: {}
-  size: 856049
-  timestamp: 1791886217524
-- conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam3-1.3-ha35fb5c_0.conda
-  sha256: 81eaa09df2a588af3d9c8ae9dc120204a2b6b391ed9aca34726a83aaa92d2d58
-  md5: 3f77937ec74f78a503408876bc59627c
+  size: 856736
+  timestamp: 1791890696471
+- conda: https://prefix.dev/vslamlab/vslamlab/linux-64/orbslam3-1.4-ha35fb5c_0.conda
+  sha256: 1bc690478aa29a2e3e5e9eab99a175df825e4aed5e3286d899abb7b1ca327bfd
+  md5: d6bf2fb181e4ad5f238bd62552a81abb
   depends:
   - pangolin-opengl
   - pangolin-opengl >=0.9.6,<0.10.0a0
-  - libarstream >=0.2[channel="https://prefix.dev/vslamlab/vslamlab/"]
+  - libarstream >=0.2.1[channel="https://prefix.dev/vslamlab/vslamlab/"]
   - libstdcxx >=16
   - libgcc >=16
   - __glibc >=2.28,<3.0.a0
@@ -47221,8 +47221,8 @@ packages:
   - libopengl >=1.7.0,<2.0a0
   license: GPL-3.0-only
   run_exports: {}
-  size: 1744462
-  timestamp: 1791887242996
+  size: 1741439
+  timestamp: 1791891331255
 - conda: https://prefix.dev/vslamlab/vslamlab/linux-64/siftgpu-1.0.0-hfe12779_0.conda
   sha256: 68804e50686443cab3a340f683c7eefec456e53d79d47915af28ed0749eaf374
   md5: bae1c32ebc8905dfbe881e6be7ca0bbe
@@ -47296,9 +47296,9 @@ packages:
   run_exports: {}
   size: 136058
   timestamp: 1791461342519
-- conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/libarstream-0.2.0-hea27dcd_0.conda
-  sha256: d897fd4298ad23b71075d18e7b901d08752883fb3e9783de036230916bfde8a4
-  md5: d224463c66c9962871abd72414329d3e
+- conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/libarstream-0.2.1-hea27dcd_0.conda
+  sha256: a16b7f18a49f9cbbca783e6f7429b4bade3055ed3ee79d428dfeaecc8a213f8d
+  md5: f1cfc151496f55e71ef18c9a6f072e99
   depends:
   - cppzmq
   - zeromq
@@ -47309,30 +47309,30 @@ packages:
   - __osx >=13.0
   license: GPL-3.0-only
   run_exports: {}
-  size: 48422
-  timestamp: 1791884757947
-- conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam2-1.2-hea27dcd_0.conda
-  sha256: a12cf40115b700434e1b9e46f9cccb60f2d11c52b04ca2024d15dbe3baef291c
-  md5: 7dd8cf2e398d32e5e2c34247b013291f
+  size: 48519
+  timestamp: 1791889497078
+- conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam2-1.3-hea27dcd_0.conda
+  sha256: 499a2de804bbee184738ec9862d09b13975d8794e28a1f91fca8345fb17da06d
+  md5: 6481e78d98e09274f73e03ac34510b39
   depends:
   - pangolin-opengl
   - pangolin-opengl >=0.9.6,<0.10.0a0
-  - libarstream >=0.2[channel="https://prefix.dev/vslamlab/vslamlab/"]
+  - libarstream >=0.2.1[channel="https://prefix.dev/vslamlab/vslamlab/"]
   - libcxx >=23
   - __osx >=13.0
   - libopencv >=4.13.0,<4.13.1.0a0
   - yaml-cpp >=0.8.0,<0.9.0a0
   license: GPL-3.0-only
   run_exports: {}
-  size: 613531
-  timestamp: 1791886233336
-- conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam3-1.3-hea27dcd_0.conda
-  sha256: c573ef2adc675aa591af14619f7dc9fb15954f5e17f1a8d73eccf7d0314ac949
-  md5: f830650ba5797250f62b44f88ddaa365
+  size: 613573
+  timestamp: 1791890715047
+- conda: https://prefix.dev/vslamlab/vslamlab/osx-arm64/orbslam3-1.4-hea27dcd_0.conda
+  sha256: f723c5384e9d0f4afe02b9165c18646f743bede2cd6dd34b3459032e31f676ed
+  md5: 6fb29872da3347aafad42331c369aa91
   depends:
   - pangolin-opengl
   - pangolin-opengl >=0.9.6,<0.10.0a0
-  - libarstream >=0.2[channel="https://prefix.dev/vslamlab/vslamlab/"]
+  - libarstream >=0.2.1[channel="https://prefix.dev/vslamlab/vslamlab/"]
   - libcxx >=23
   - __osx >=13.0
   - libopencv >=4.13.0,<4.13.1.0a0
@@ -47342,10 +47342,10 @@ packages:
   license: GPL-3.0-only
   run_exports: {}
   size: 1183288
-  timestamp: 1791887264112
-- conda: https://prefix.dev/vslamlab/vslamlab/win-64/libarstream-0.2.0-h659f713_0.conda
-  sha256: 6c43a3b615d5534fc996ab44101c77db32823a2ff4ef5e0de66407a880a6667c
-  md5: db0f877d747b80046f6d67cb35034bec
+  timestamp: 1791891346420
+- conda: https://prefix.dev/vslamlab/vslamlab/win-64/libarstream-0.2.1-h659f713_0.conda
+  sha256: 903ddd8b9882462d1a49e945df7df3cee08bdeb53c95eaf53c51ee8b34a00ebd
+  md5: 0389c5f86b7b2246a5f6678131cf12ad
   depends:
   - cppzmq
   - zeromq
@@ -47357,15 +47357,15 @@ packages:
   - ucrt >=10.0.20348.0
   license: GPL-3.0-only
   run_exports: {}
-  size: 52512
-  timestamp: 1791884779195
-- conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam2-1.2-h659f713_0.conda
-  sha256: e011743f36675ab91ea0ee3b4c16f5ee9780e30bccf51bc8221917dfe10ba27b
-  md5: 9b2d559c49af534a673e5224b68226c8
+  size: 52648
+  timestamp: 1791889568687
+- conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam2-1.3-h659f713_0.conda
+  sha256: c32c589d03a1b446e5a82ad673d146864119f3e969a59b7f24b7a58a11a0ce64
+  md5: 96264938b30144ce42514f16adeaccfb
   depends:
   - pangolin-opengl
   - pangolin-opengl >=0.9.6,<0.10.0a0
-  - libarstream >=0.2[channel="https://prefix.dev/vslamlab/vslamlab/"]
+  - libarstream >=0.2.1[channel="https://prefix.dev/vslamlab/vslamlab/"]
   - vc >=14.3,<15
   - vc14_runtime >=14.44.35208
   - ucrt >=10.0.20348.0
@@ -47373,15 +47373,15 @@ packages:
   - yaml-cpp >=0.8.0,<0.9.0a0
   license: GPL-3.0-only
   run_exports: {}
-  size: 2090439
-  timestamp: 1791886259970
-- conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam3-1.3-h659f713_0.conda
-  sha256: 9d46dae4a8beb42ce30169c3188a2f75a816560e813d50207eec6c7c7f99a0b7
-  md5: 137fd8b69078b1cc01e401e040a017c5
+  size: 2090464
+  timestamp: 1791890810779
+- conda: https://prefix.dev/vslamlab/vslamlab/win-64/orbslam3-1.4-h659f713_0.conda
+  sha256: 87edec3ee036400bf19d0ca51b6360b32d0409f4436bbf98e286cbed7e4a8254
+  md5: ea3606a197ac96900da682f9e9c1ddf6
   depends:
   - pangolin-opengl
   - pangolin-opengl >=0.9.6,<0.10.0a0
-  - libarstream >=0.2[channel="https://prefix.dev/vslamlab/vslamlab/"]
+  - libarstream >=0.2.1[channel="https://prefix.dev/vslamlab/vslamlab/"]
   - vc >=14.3,<15
   - vc14_runtime >=14.44.35208
   - ucrt >=10.0.20348.0
@@ -47391,8 +47391,8 @@ packages:
   - openssl >=3.6.5,<4.0a0
   license: GPL-3.0-only
   run_exports: {}
-  size: 2656018
-  timestamp: 1791887316152
+  size: 2656024
+  timestamp: 1791891439277
 - conda: https://repo.prefix.dev/spqr-tests/linux-64/tensorrt-cxx-builder-10.3.0.26-h736c03c_1.conda
   sha256: 147eb1b04861591bf04088fc6ec4dabe2e9a69af1082aa0910f6b526cfc168d7
   md5: 7d884fbe8008af72fe37b5371b74256b
