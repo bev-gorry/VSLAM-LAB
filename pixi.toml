@@ -574,7 +574,7 @@ execute-mono = { cmd = "pixi run --frozen execute-mono", cwd = "Baselines/VGGT-S
 ########################################################################################################################
 # allfeature-dev
 [feature.allfeature-dev]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64"]   # osx-arm64: the GPU-free build (AllFeature-VSLAM docs/plans/mac_port.md)
 
 # Tasks forward to the clone's own pixi.toml (github.com/alejandrofontan/AllFeature-VSLAM, branch dev), whose
 # environment lives in Baselines/AllFeature-VSLAM-DEV/.pixi. Run tasks use --frozen so only `install` re-solves it.
