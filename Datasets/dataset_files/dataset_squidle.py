@@ -271,14 +271,15 @@ class SesokoDataset(SquidleDataset):
         if _mark_complete_if_already_downloaded(rgb_path / ".download_complete", rgb_path):
             return
 
+        # Parent and part sequences go through the full download (calibration.yaml included), so they can be run too
         if sequence_name in self.subsets.keys():
-            super().download_sequence_data(self.subsets.get(sequence_name)[0])
+            self.download_sequence(self.subsets.get(sequence_name)[0])
             self.download_subsequence(sequence_name)
             return
 
         if sequence_name in self.combined.keys():
             for subset in self.combined.get(sequence_name):
-                self.download_sequence_data(subset)
+                self.download_sequence(subset)
             self.download_combined_subsequence(sequence_name)
             return
 

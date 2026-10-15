@@ -19,14 +19,22 @@ convention) into sequence folders and runs the capability's `inference` task on 
 
 Sequences that already have a D.npy are skipped unless --overwrite. --method selects the VPR method (default:
 megaloc). The Hugging Face token from path_constants is passed to the capability as HF_TOKEN.
+Next to every newly computed D.npy, vpr_info.yaml records the method, rotations, image count, processing time and GPU
+of the run, which the colmap baseline's run report reads.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import shutil
+import subprocess
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -48,10 +56,38 @@ def sequence_d_matrix(dataset_name: str, sequence_name: str) -> Path:
 
 
 def compute_d_matrix(pairs: list[tuple[str, str]], extra_args: list[str] | None = None) -> None:
-    """Run the capability on (dataset, sequence) pairs."""
+    """Run the capability on (dataset, sequence) pairs, one sequence at a time so each run can be timed."""
     if HUGGINGFACE_TOKEN is not None:
         os.environ["HF_TOKEN"] = HUGGINGFACE_TOKEN  # inherited by the capability's pixi run
-    CAPABILITY.run([sequence_path(dataset, sequence) for dataset, sequence in pairs], extra_args)
+    for dataset, sequence in pairs:
+        d_matrix = sequence_d_matrix(dataset, sequence)
+        mtime_before = d_matrix.stat().st_mtime if d_matrix.exists() else None
+        start = time.perf_counter()
+        CAPABILITY.run([sequence_path(dataset, sequence)], extra_args)
+        # A skipped sequence (D.npy exists, no --overwrite) keeps its previous vpr_info.yaml
+        if d_matrix.exists() and d_matrix.stat().st_mtime != mtime_before:
+            write_vpr_info(dataset, sequence, extra_args, time.perf_counter() - start)
+
+
+def write_vpr_info(dataset: str, sequence: str, extra_args: list[str] | None, runtime_s: float) -> None:
+    method = next((arg.split("=", 1)[1] for arg in extra_args or [] if arg.startswith("--method=")), DEFAULT_METHOD)
+    rgb_csv = sequence_path(dataset, sequence) / "rgb.csv"
+    gpu = subprocess.run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"],
+                         capture_output=True, text=True).stdout.strip() if shutil.which("nvidia-smi") else ""
+    info = {
+        "method": method,
+        # the capability always extracts at 4 rotations and keeps the element-wise minimum (vslamlab_vpr.py --rot_360)
+        "rotations_deg": [0, 90, 180, 270],
+        "combination": "element-wise minimum over rotations",
+        "num_images": sum(1 for _ in open(rgb_csv)) - 1,
+        "rgb_csv": str(rgb_csv),
+        # wall-clock of the capability run: model load, descriptors at every rotation, distance matrices, saving
+        "runtime_s": round(runtime_s, 1),
+        "gpu": gpu or "none detected",
+        "date": datetime.now().isoformat(timespec="seconds"),
+    }
+    with open(sequence_vpr_dir(dataset, sequence) / "vpr_info.yaml", "w") as f:
+        yaml.safe_dump(info, f, sort_keys=False)
 
 
 def main() -> None:

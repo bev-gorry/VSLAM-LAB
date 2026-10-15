@@ -25,6 +25,8 @@ class COLMAP_baseline(BaselineVSLAMLAB):
         # distortion; the principal point stays fixed, as in COLMAP's default); 0 -> the intrinsics
         # from the calibration yaml are kept fixed. Ignored (forced to 1) when the calibration model
         # is 'unknown', since there are no intrinsics to keep (see Baselines/colmap/colmap_mapper.py).
+        # camera_model: COLMAP camera model for an 'unknown' calibration, e.g. 'PINHOLE' to estimate focal lengths
+        # without distortion ('' -> OPENCV); a known calibration sets its own model.
         # dense: 1 -> after the sparse model and trajectory are written, run COLMAP's dense pipeline
         # (image_undistorter -> patch_match_stereo -> stereo_fusion) on the best sub-model, into
         # <exp_folder>/colmap_<id>/dense/ with the fused cloud copied to <exp_folder>/<id>_dense.ply.
@@ -36,20 +38,23 @@ class COLMAP_baseline(BaselineVSLAMLAB):
         # mesher: 'none' | 'delaunay' | 'poisson' | 'advancing_front' -> mesh the fused cloud / dense
         # workspace, copied to <id>_mesh.ply.
         # Fork additions (Baselines/colmap is the fork of COLMAP-VSLAM-LAB that holds the hybrid matcher):
-        # matcher_type: 'hybrid' -> exhaustive SIFT + SuperPoint/LightGlue on selected pairs (Baselines/colmap/hybrid_matcher.py),
+        # matcher_type: 'hybrid' -> exhaustive SIFT + learned-feature matches on selected pairs (Baselines/colmap/hybrid_matcher.py),
         #   then `colmap geometric_verifier`. Its options:
+        #   hybrid_features: 'superpoint' | 'aliked' (4 rotations) | 'sift' (rotation invariant, 1)
+        #   hybrid_matching: 'lightglue' | 'bruteforce' (mutual nearest neighbours; + ratio test 0.8 for sift)
         #   pair_selection: 'vpr' (MegaLoc pairs) | 'cross_session' | 'all'
         #   vpr_matrix / vpr_rgb_csv: distance matrix and the rgb csv its rows follow ('' -> <sequence>/vpr-lab/D.npy
         #     and <sequence>/rgb.csv; relative paths are inside the sequence folder)
-        #   vpr_threshold: kept if min-max-normalised distance <= threshold; lg_min_matches: LightGlue kept if > this;
+        #   vpr_threshold: kept if min-max-normalised distance <= threshold; lg_min_matches: hybrid matches kept if > this;
         #   min_matches: pair dropped below this; verification: 'colmap' | 'glomap' (GLOMAP 1.2.0-like) | 'none' (original pipeline)
         # single_camera_per_folder: 1 (upstream) -> one camera per session folder; 0 -> one shared camera (original hybrid pipeline)
         # random_seed: -1 (COLMAP default) or >= 0 for repeatable verification + mapping
         default_parameters = {'verbose': 1, 'mode': 'mono', 'matcher_type': 'exhaustive',
                              'matching_type': 'sift_bruteforce', 'mapper_type': 'colmap', 'rgb_max': 50000000,
-                             'use_mask': 0, 'optimize_intrinsics': 1,
+                             'use_mask': 0, 'optimize_intrinsics': 1, 'camera_model': '',
                              'dense': 0, 'dense_max_image_size': 1600, 'mesher': 'none',
                              'single_camera_per_folder': 1, 'random_seed': -1,
+                             'hybrid_features': 'superpoint', 'hybrid_matching': 'lightglue',
                              'pair_selection': 'vpr', 'vpr_matrix': '', 'vpr_rgb_csv': '', 'vpr_threshold': 0.5,
                              'lg_min_matches': 40, 'min_matches': 10, 'verification': 'colmap'}
 
