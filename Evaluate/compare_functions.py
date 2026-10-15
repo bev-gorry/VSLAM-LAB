@@ -1,6 +1,7 @@
 import os
 
 import matplotlib.pyplot as plt
+from Evaluate import plot_utilities
 import yaml
 
 from Evaluate import plot_functions
@@ -51,7 +52,7 @@ def full_comparison(experiments, VSLAMLAB_BENCHMARK, COMPARISONS_YAML_DEFAULT, c
         if comparisons[comparison]:
             switch_comparison(comparison)
 
-    plt.show()
+    plot_utilities.show()
 
 
 def get_experiments(experiments):

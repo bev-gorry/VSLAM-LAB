@@ -3,6 +3,7 @@
 import sys
 import time
 import shutil
+import importlib
 import subprocess
 import numpy as np
 import pandas as pd
@@ -18,30 +19,32 @@ from utilities import print_msg, write_csv_rows
 # sys.path directly (sample_vpr.py itself imports its artifact helper from the Capabilities package).
 sys.path.insert(0, str(VSLAM_LAB_DIR / "Datasets" / "extra-files"))
 from sample_vpr import sweep_thresholds, select_for_target, selected_rows
-# Capabilities/placecell.py is numpy-only at import time (the compiled placecell module is imported
-# lazily, inside the 'placecell' pixi environment), so its csv helper can be imported here.
-from Capabilities.placecell import SELECTION_CSV as PLACECELL_SELECTION_CSV, read_selection_csv as read_placecell_selection
+# The placecell driver runs the capability's own environment (Capabilities/sources/placecell) as a subprocess.
+from Capabilities.placecell import SELECTION_CSV as PLACECELL_SELECTION_CSV, run_selection as run_placecell_selection
 
 SCRIPT_LABEL = f"\033[95m[{Path(__file__).name}]\033[0m "
 
-# Mask folders written by Capabilities/mask2former.py ('pixi run mask-inference'). Kept as
-# local constants rather than imported: importing mask2former.py pulls in torch/transformers,
-# which the vslamlab environment doesn't ship.
+# Mask folders written by the mask2former capability (Capabilities/mask2former.py, 'pixi run mask-inference').
 MASK_FOLDER_BASE = "mask2former"
 MASK_COMPLETE_MARKER = ".mask2former_complete"
 
-# Depth folder written by Capabilities/fastfoundationstereo.py ('pixi run stereo-inference').
-# Same reasoning as the mask constants above: not imported to avoid torch deps.
-DEPTH_FOLDER_BASE = "fastfoundationstereo"
-DEPTH_COMPLETE_MARKER = ".fastfoundationstereo_complete"
-DEPTH_FACTOR_DEFAULT = 256.0  # the script's default; only used for markers that don't record their depth_factor
+# Depth capabilities an experiment can request with 'depth: <name>': the artifact folder (<folder>_0) and marker they
+# write, whether they need a stereo pair, and their driver (module, function) in Capabilities/, called when the
+# marker is missing ('pixi run stereo-inference' / 'pixi run depth-inference').
+DEPTH_CAPABILITIES = {
+    'fastfoundationstereo': {'folder': "fastfoundationstereo", 'marker': ".fastfoundationstereo_complete",
+                             'stereo': True, 'driver': ("Capabilities.fastfoundationstereo", "generate_stereo_depth")},
+    'depth_anything': {'folder': "depth_anything", 'marker': ".depth_anything_complete",
+                       'stereo': False, 'driver': ("Capabilities.depth_anything", "generate_mono_depth")},
+}
+DEPTH_FACTOR_DEFAULT = 256.0  # the capabilities' default; only used for markers that don't record their depth_factor
 
 # Calibration artifact written by Capabilities/anycalib.py ('pixi run calib-inference').
 # Same reasoning as above: not imported to avoid torch deps.
 ANYCALIB_FOLDER = "anycalib"
 
-# Refraction-corrected rgb_0 frames written by Capabilities/refrax.py
-# ('pixi run refrax-inference'). Same reasoning as above: kept as local constants.
+# Refraction-corrected rgb_0 frames written by the refrax capability (Capabilities/refrax.py,
+# 'pixi run refrax-inference'). Same reasoning as above: kept as local constants.
 REFRACTION_FOLDER_BASE = "refrax"
 REFRACTION_COMPLETE_MARKER = ".refrax_complete"
 
@@ -179,12 +182,12 @@ def create_rgb_exp_csv(exp: Any, dataset: Any, sequence_name: str, default_param
 
         if has_rgb_placecell:
             rgb_placecell_num = exp.parameters['rgb_placecell'] if 'rgb_placecell' in exp.parameters else default_parameters['rgb_placecell']
-            ensure_vpr_matrix(dataset, sequence_name, sequence_path, total_frames, 'rgb_placecell')
+            d_matrix_path = ensure_vpr_matrix(dataset, sequence_name, sequence_path, total_frames, 'rgb_placecell')
 
             if rgb_placecell_num >= len(rows):
                 filter_info.append(f"rgb_placecell={rgb_placecell_num} -> {len(rows)} frames (already <= target)")
             else:
-                kept_idx = select_frames_with_placecell(dataset, sequence_name, exp_folder, orig_idx, rgb_placecell_num)
+                kept_idx = select_frames_with_placecell(d_matrix_path, exp_folder, orig_idx, rgb_placecell_num)
                 position = {idx: k for k, idx in enumerate(orig_idx)}
                 rows = [rows[position[idx]] for idx in kept_idx]
                 orig_idx = kept_idx
@@ -234,21 +237,22 @@ def create_rgb_exp_csv(exp: Any, dataset: Any, sequence_name: str, default_param
 
     if has_depth:
         depth = exp.parameters['depth'] if 'depth' in exp.parameters else default_parameters['depth']
-        if depth == 'fastfoundationstereo':
-            append_stereo_depth_columns(dataset, sequence_name, sequence_path, rgb_exp_csv, exp_folder / CALIBRATION_EXP_YAML)
+        if depth in DEPTH_CAPABILITIES:
+            append_depth_columns(dataset, sequence_name, sequence_path, rgb_exp_csv, exp_folder / CALIBRATION_EXP_YAML, depth)
         else:
-            print_msg(SCRIPT_LABEL, f"depth='{depth}' not recognized (only 'fastfoundationstereo' is supported); ignoring", flag="error", verb='NONE')
+            print_msg(SCRIPT_LABEL, f"depth='{depth}' not recognized (supported: {', '.join(DEPTH_CAPABILITIES)}); ignoring", flag="error", verb='NONE')
 
 def ensure_vpr_matrix(dataset: Any, sequence_name: str, sequence_path: Path, total_frames: int, parameter: str) -> Path:
     """<sequence>/vpr-lab/D.npy, the VPR distance matrix both rgb_vpr and rgb_placecell select
-    frames on. Generated with 'pixi run vpr' (Capabilities/vpr.py, vpr-lab environment) when
+    frames on. Generated with the vpr capability (Capabilities/vpr.py) when
     missing. Its row count must match the frame list the experiment indexes it with
     (total_frames): a mismatch (e.g. rgb.csv sampled after the matrix was computed) would
     silently pick the wrong frames, so it stops the run instead."""
     d_matrix_path = sequence_path / "vpr-lab" / "D.npy"
     if not d_matrix_path.exists():
-        print_msg(SCRIPT_LABEL, f"{parameter}: {d_matrix_path} not found, running 'pixi run vpr {dataset.dataset_name} {sequence_name}' ...", verb='LOW')
-        subprocess.run(["pixi", "run", "-e", "vpr-lab", "vpr", dataset.dataset_name, sequence_name], cwd=VSLAM_LAB_DIR, check=True)
+        print_msg(SCRIPT_LABEL, f"{parameter}: {d_matrix_path} not found, running the vpr capability ...", verb='LOW')
+        from Capabilities.vpr import compute_d_matrix
+        compute_d_matrix([(dataset.dataset_name, sequence_name)])
     if not d_matrix_path.exists():
         print_msg(SCRIPT_LABEL, f"{parameter}: 'pixi run vpr' did not produce {d_matrix_path} (see its output above)", flag="error", verb='NONE')
         sys.exit(1)
@@ -260,27 +264,15 @@ def ensure_vpr_matrix(dataset: Any, sequence_name: str, sequence_path: Path, tot
         sys.exit(1)
     return d_matrix_path
 
-def select_frames_with_placecell(dataset: Any, sequence_name: str, exp_folder: Path, orig_idx: list[int], n_images: int) -> list[int]:
+def select_frames_with_placecell(d_matrix_path: Path, exp_folder: Path, orig_idx: list[int], n_images: int) -> list[int]:
     """The n_images least redundant frames among orig_idx (row indices of the sequence's frame
-    list, i.e. of D.npy), chosen by placecell's information culler: 'pixi run -e placecell
-    placecell-select ... --indices <file> --out <exp_folder>/rgb_placecell.csv' (Capabilities/
-    placecell.py, which never touches the sequence). The selection csv stays in the experiment
-    folder as a diagnostic (removal rank and unique information per frame); the returned indices
-    are the rows it marks kept, in frame order."""
-    indices_file = exp_folder / "rgb_placecell_indices.txt"
+    list, i.e. of D.npy), chosen by placecell's information culler (Capabilities/placecell.py,
+    which never touches the sequence). The selection csv stays in the experiment folder as a
+    diagnostic (removal rank and unique information per frame); the returned indices are the rows
+    it marks kept, in frame order."""
     selection_csv = exp_folder / PLACECELL_SELECTION_CSV
-    indices_file.write_text("\n".join(str(i) for i in orig_idx) + "\n")
-    if selection_csv.exists():
-        selection_csv.unlink()
-    print_msg(SCRIPT_LABEL, f"rgb_placecell: selecting {n_images} of {len(orig_idx)} frames with 'pixi run placecell-select {dataset.dataset_name} {sequence_name}' ...", verb='LOW')
-    subprocess.run(["pixi", "run", "-e", "placecell", "placecell-select", dataset.dataset_name, sequence_name,
-                    "--n-images", str(n_images), "--indices", str(indices_file), "--out", str(selection_csv)],
-                   cwd=VSLAM_LAB_DIR, check=True)
-    indices_file.unlink(missing_ok=True)
-    if not selection_csv.exists():
-        print_msg(SCRIPT_LABEL, f"rgb_placecell: 'pixi run placecell-select' did not produce {selection_csv} (see its output above)", flag="error", verb='NONE')
-        sys.exit(1)
-    kept_idx = read_placecell_selection(selection_csv)
+    print_msg(SCRIPT_LABEL, f"rgb_placecell: selecting {n_images} of {len(orig_idx)} frames with the placecell capability ...", verb='LOW')
+    kept_idx = run_placecell_selection(d_matrix_path, n_images, selection_csv, indices=orig_idx)
     candidates = set(orig_idx)
     if not kept_idx or any(idx not in candidates for idx in kept_idx):
         print_msg(SCRIPT_LABEL, f"rgb_placecell: {selection_csv} does not match the candidate frames (got {len(kept_idx)} kept rows)", flag="error", verb='NONE')
@@ -309,10 +301,11 @@ def create_calibration_exp_yaml(exp: Any, dataset: Any, sequence_name: str, defa
         if calibration == 'anycalib':
             anycalib_yaml = sequence_path / ANYCALIB_FOLDER / 'calibration.yaml'
             if not anycalib_yaml.exists():
-                print_msg(SCRIPT_LABEL, f"calibration: {anycalib_yaml} not found, running 'pixi run calib-inference {dataset.dataset_name} {sequence_name}' ...", verb='LOW')
-                subprocess.run(["pixi", "run", "-e", "anycalib", "calib-inference", dataset.dataset_name, sequence_name], cwd=VSLAM_LAB_DIR, check=True)
+                print_msg(SCRIPT_LABEL, f"calibration: {anycalib_yaml} not found, running the anycalib capability ...", verb='LOW')
+                from Capabilities.anycalib import estimate_intrinsics
+                estimate_intrinsics([(dataset.dataset_name, sequence_name)])
             if not anycalib_yaml.exists():
-                print_msg(SCRIPT_LABEL, f"calibration: 'pixi run calib-inference' did not produce {anycalib_yaml} (see its output above)", flag="error", verb='NONE')
+                print_msg(SCRIPT_LABEL, f"calibration: the anycalib capability did not produce {anycalib_yaml} (see its output above)", flag="error", verb='NONE')
                 sys.exit(1)
             calibration_yaml = anycalib_yaml
             print_msg(SCRIPT_LABEL, f"calibration: using AnyCalib intrinsics ({anycalib_yaml.relative_to(sequence_path)}) for {sequence_name}", verb='LOW')
@@ -331,7 +324,7 @@ def create_calibration_exp_yaml(exp: Any, dataset: Any, sequence_name: str, defa
 def append_mask2former_columns(dataset: Any, sequence_name: str, sequence_path: Path, rgb_exp_csv: Path) -> None:
     """Append ts_mask_<i> (ns)/path_mask_<i> columns to the experiment's rgb_exp csv, one pair per
     path_rgb_<i> stream, pointing at the sequence's mask2former_<i> masks. Streams whose
-    .mask2former_complete marker is missing trigger 'pixi run mask-inference' first to generate
+    .mask2former_complete marker is missing run the mask2former capability first to generate
     them. Only rgb_exp_csv is rewritten - the sequence's rgb.csv is left untouched."""
     df = pd.read_csv(rgb_exp_csv)
     streams = sorted(
@@ -344,8 +337,9 @@ def append_mask2former_columns(dataset: Any, sequence_name: str, sequence_path: 
 
     missing = [i for i in streams if not (sequence_path / f"{MASK_FOLDER_BASE}_{i}" / MASK_COMPLETE_MARKER).exists()]
     if missing:
-        print_msg(SCRIPT_LABEL, f"segmentation: masks missing for {sequence_name} (streams {missing}), running 'pixi run mask-inference {dataset.dataset_name} {sequence_name}' ...", verb='LOW')
-        subprocess.run(["pixi", "run", "-e", "mask2former", "mask-inference", dataset.dataset_name, sequence_name], cwd=VSLAM_LAB_DIR, check=True)
+        print_msg(SCRIPT_LABEL, f"segmentation: masks missing for {sequence_name} (streams {missing}), running the mask2former capability ...", verb='LOW')
+        from Capabilities.mask2former import generate_masks
+        generate_masks([(dataset.dataset_name, sequence_name)])
 
     for i in streams:
         df[f"ts_mask_{i} (ns)"] = df[f"ts_rgb_{i} (ns)"]
@@ -353,28 +347,31 @@ def append_mask2former_columns(dataset: Any, sequence_name: str, sequence_path: 
     df.to_csv(rgb_exp_csv, index=False)
     print_msg(SCRIPT_LABEL, f"segmentation: appended mask2former columns for streams {streams} to {rgb_exp_csv.name}", verb='LOW')
 
-def append_stereo_depth_columns(dataset: Any, sequence_name: str, sequence_path: Path, rgb_exp_csv: Path, calibration_exp_yaml: Path) -> None:
+def append_depth_columns(dataset: Any, sequence_name: str, sequence_path: Path, rgb_exp_csv: Path,
+                         calibration_exp_yaml: Path, capability: str) -> None:
     """Append ts_depth_0 (ns)/path_depth_0 columns to the experiment's rgb_exp csv, pointing at the
-    sequence's fastfoundationstereo_0 depth maps computed from the rgb_0/rgb_1 stereo pair, and
-    register that depth stream in the experiment's calibration_exp.yaml (register_depth_stream) so
-    rgbd baselines can consume it. If the .fastfoundationstereo_complete marker is missing,
-    'pixi run stereo-inference' is triggered first to generate the depth (it resumes per frame,
-    never recomputing existing depth PNGs). A sequence that already ships depth columns (a real
-    RGBD dataset) is left untouched, as are the sequence's own rgb.csv and calibration.yaml -
-    only the experiment's rgb_exp.csv and calibration_exp.yaml are rewritten."""
+    sequence's <capability>_0 depth maps (DEPTH_CAPABILITIES: fastfoundationstereo from the rgb_0/rgb_1
+    stereo pair, depth_anything from rgb_0 alone), and register that depth stream in the experiment's
+    calibration_exp.yaml (register_depth_stream) so rgbd baselines can consume it. If the capability's
+    completion marker is missing, the capability is run first to generate the depth (it resumes per
+    frame, never recomputing existing depth PNGs). A sequence that already ships depth columns (a real
+    RGBD dataset) is left untouched, as are the sequence's own rgb.csv and calibration.yaml - only the
+    experiment's rgb_exp.csv and calibration_exp.yaml are rewritten."""
+    spec = DEPTH_CAPABILITIES[capability]
     df = pd.read_csv(rgb_exp_csv)
     if 'path_depth_0' in df.columns:
         print_msg(SCRIPT_LABEL, f"depth: {rgb_exp_csv.name} already has depth columns; leaving them untouched", verb='LOW')
         return
-    if 'path_rgb_1' not in df.columns:
-        print_msg(SCRIPT_LABEL, f"depth=fastfoundationstereo requires a stereo sequence (path_rgb_0 and path_rgb_1) but {rgb_exp_csv} has no path_rgb_1; skipping depth columns", flag="error", verb='NONE')
+    if spec['stereo'] and 'path_rgb_1' not in df.columns:
+        print_msg(SCRIPT_LABEL, f"depth={capability} requires a stereo sequence (path_rgb_0 and path_rgb_1) but {rgb_exp_csv} has no path_rgb_1; skipping depth columns", flag="error", verb='NONE')
         return
 
-    depth_folder = f"{DEPTH_FOLDER_BASE}_0"
-    marker = sequence_path / depth_folder / DEPTH_COMPLETE_MARKER
+    depth_folder = f"{spec['folder']}_0"
+    marker = sequence_path / depth_folder / spec['marker']
     if not marker.exists():
-        print_msg(SCRIPT_LABEL, f"depth: depth missing for {sequence_name}, running 'pixi run stereo-inference {dataset.dataset_name} {sequence_name}' ...", verb='LOW')
-        subprocess.run(["pixi", "run", "-e", "fastfoundationstereo", "stereo-inference", dataset.dataset_name, sequence_name], cwd=VSLAM_LAB_DIR, check=True)
+        print_msg(SCRIPT_LABEL, f"depth: depth missing for {sequence_name}, running the {capability} capability ...", verb='LOW')
+        module, function = spec['driver']
+        getattr(importlib.import_module(module), function)([(dataset.dataset_name, sequence_name)])
 
     # The marker records the depth_factor the script encoded the PNGs with (empty markers predate
     # that and were written with the script's default).
@@ -386,17 +383,17 @@ def append_stereo_depth_columns(dataset: Any, sequence_name: str, sequence_path:
     df["ts_depth_0 (ns)"] = df["ts_rgb_0 (ns)"]
     df["path_depth_0"] = [f"{depth_folder}/{Path(p).stem}.png" for p in df["path_rgb_0"]]
     df.to_csv(rgb_exp_csv, index=False)
-    print_msg(SCRIPT_LABEL, f"depth: appended fastfoundationstereo depth columns to {rgb_exp_csv.name}", verb='LOW')
+    print_msg(SCRIPT_LABEL, f"depth: appended {capability} depth columns to {rgb_exp_csv.name}", verb='LOW')
 
-    register_depth_stream(calibration_exp_yaml, depth_folder, depth_factor)
+    register_depth_stream(calibration_exp_yaml, "depth_0", depth_factor)
 
 def replace_rgb_with_refraction_corrected(dataset: Any, sequence_name: str, sequence_path: Path, rgb_exp_csv: Path,
                                           calibration_exp_yaml: Path, calibration_overridden: bool = False) -> None:
     """Point path_rgb_0 of the experiment's rgb_exp csv at the sequence's refrax_0
     corrected frames (<frame stem>.png) and replace the experiment's calibration_exp.yaml with the
     artifact's calibration.yaml (the rgb_0 entry rewritten for the corrected pinhole camera). If
-    the .refrax_complete marker is missing, 'pixi run refrax-inference' is
-    triggered first (it resumes per frame). ts_mask_0 (ns)/path_mask_0 columns pointing at the
+    the .refrax_complete marker is missing, the refrax capability is run first
+    (Capabilities/refrax.py; it resumes per frame). ts_mask_0 (ns)/path_mask_0 columns pointing at the
     artifact's mask.png (1 = usable pixel; all ones for cropped artifacts, the invalid border for
     --no-crop ones) are appended like mask2former's, unless the csv already has them. Only the
     experiment's rgb_exp.csv and calibration_exp.yaml are rewritten - the sequence's own files are
@@ -409,13 +406,17 @@ def replace_rgb_with_refraction_corrected(dataset: Any, sequence_name: str, sequ
     folder = f"{REFRACTION_FOLDER_BASE}_0"
     marker = sequence_path / folder / REFRACTION_COMPLETE_MARKER
     if not marker.exists():
-        print_msg(SCRIPT_LABEL, f"refraction: corrected frames missing for {sequence_name}, running 'pixi run refrax-inference {dataset.dataset_name} {sequence_name}' ...", verb='LOW')
-        # check=False: a capability that skips the sequence (missing frames, uncalibrated camera, ...) exits 0 with a
-        # warning, so the marker check below is the real test either way and gives one clear message.
-        subprocess.run(["pixi", "run", "-e", "refrax", "refrax-inference", dataset.dataset_name, sequence_name], cwd=VSLAM_LAB_DIR, check=False)
+        print_msg(SCRIPT_LABEL, f"refraction: corrected frames missing for {sequence_name}, running the refrax capability ...", verb='LOW')
+        from Capabilities.refrax import remove_refraction
+        # A capability that skips the sequence (missing frames, uncalibrated camera, ...) exits 0 with a warning and a
+        # failing one raises: the marker check below is the real test either way and gives one clear message.
+        try:
+            remove_refraction([(dataset.dataset_name, sequence_name)])
+        except subprocess.CalledProcessError:
+            pass
     artifact_yaml = sequence_path / folder / 'calibration.yaml'
     if not marker.exists() or not artifact_yaml.exists():
-        print_msg(SCRIPT_LABEL, f"refraction: 'pixi run refrax-inference {dataset.dataset_name} {sequence_name}' did not produce {marker.parent} "
+        print_msg(SCRIPT_LABEL, f"refraction: the refrax capability did not produce {marker.parent} "
                   f"(see its output above); cannot run {sequence_name} on refraction-corrected frames", flag="error", verb='NONE')
         sys.exit(1)
 
@@ -446,15 +447,16 @@ def replace_rgb_with_refraction_corrected(dataset: Any, sequence_name: str, sequ
     print_msg(SCRIPT_LABEL, f"refraction: path_rgb_0 -> {folder}/ (zoom={metadata.get('zoom')}, z0={metadata.get('z0')}, crop={metadata.get('crop')}), "
               f"path_mask_0 -> {folder}/mask.png, {calibration_exp_yaml.name} replaced by {folder}/calibration.yaml for {sequence_name}", verb='LOW')
 
-def register_depth_stream(calibration_exp_yaml: Path, depth_folder: str, depth_factor: float) -> None:
+def register_depth_stream(calibration_exp_yaml: Path, depth_name: str, depth_factor: float) -> None:
     """Declare a generated depth stream on the rgb_0 camera entry of the experiment's
     calibration_exp.yaml: depth_name/depth_factor and a '+depth' cam_type, with the same field
     placement as DatasetVSLAMLAB_calibration._get_rgbd_yaml_section (depth_name after cam_type,
     depth_factor after fps), so rgbd baselines - which read depth_name/depth_factor from the
-    calibration yaml - can consume it. The edit is line-based (the file's hand-formatted flow
-    style and comments are preserved) and idempotent. An rgb_0 entry that already declares a
-    different depth stream (a real RGBD dataset) is left untouched. Only the per-experiment copy
-    is edited - never the sequence's calibration.yaml."""
+    calibration yaml - can consume it. depth_name is the stream name of the rgb csv columns
+    (path_<depth_name>, i.e. depth_0), not the artifact folder the paths point into. The edit is
+    line-based (the file's hand-formatted flow style and comments are preserved) and idempotent.
+    An rgb_0 entry that already declares a different depth stream (a real RGBD dataset) is left
+    untouched. Only the per-experiment copy is edited - never the sequence's calibration.yaml."""
     if not calibration_exp_yaml.exists():
         print_msg(SCRIPT_LABEL, f"depth: {calibration_exp_yaml} missing; cannot register the depth stream", flag="error", verb='NONE')
         return
@@ -473,7 +475,7 @@ def register_depth_stream(calibration_exp_yaml: Path, depth_folder: str, depth_f
     factor_line = f"     depth_factor: {float(depth_factor)},"
     depth_name_idx = find("depth_name:")
     if depth_name_idx is not None:
-        if depth_folder not in lines[depth_name_idx]:
+        if depth_name not in lines[depth_name_idx]:
             print_msg(SCRIPT_LABEL, f"depth: rgb_0 already declares another depth stream ({lines[depth_name_idx].strip().rstrip(',')}); leaving {calibration_exp_yaml.name} untouched", flag="error", verb='NONE')
             return
         factor_idx = find("depth_factor:")
@@ -493,10 +495,10 @@ def register_depth_stream(calibration_exp_yaml: Path, depth_folder: str, depth_f
             lines[cam_type_idx] = f"     cam_type: {cam_type}+depth,"
         # insert bottom-up so the earlier index stays valid
         lines.insert(fps_idx + 1, factor_line)
-        lines.insert(cam_type_idx + 1, f"     depth_name: {depth_folder},")
+        lines.insert(cam_type_idx + 1, f"     depth_name: {depth_name},")
 
     calibration_exp_yaml.write_text("\n".join(lines) + "\n")
-    print_msg(SCRIPT_LABEL, f"depth: registered depth stream '{depth_folder}' (depth_factor={depth_factor:g}) in {calibration_exp_yaml.name}", verb='LOW')
+    print_msg(SCRIPT_LABEL, f"depth: registered depth stream '{depth_name}' (depth_factor={depth_factor:g}) in {calibration_exp_yaml.name}", verb='LOW')
 
 def get_sequence_data_for_evaluation(exp: Any, dataset: Any, sequence_name: str) -> None:
     sequence_path = dataset.dataset_path /  sequence_name

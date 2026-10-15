@@ -23,7 +23,7 @@ Install pixi first (`curl -fsSL https://pixi.sh/install.sh | bash`), then all co
 
 There is **no automated test suite**. To verify a change works, run the relevant experiment config, e.g. `pixi run vslamlab configs/test_exp_<name>.yaml` or `pixi run vslamlab configs/exp_debug.yaml`, targeting the baseline/dataset you touched.
 
-There's no linter/formatter configured yet. `ruff` is a reasonable option if one gets added later (as a pixi feature/environment) — not currently set up.
+ruff, isort and pycodestyle are installed in the `vslamlab` environment (its `development` feature; e.g. `pixi run -e vslamlab ruff check <file> --line-length 120`), but there is no project linter/formatter configuration and no pre-commit setup.
 
 ## Project structure
 
@@ -31,7 +31,7 @@ There's no linter/formatter configured yet. `ruff` is a reasonable option if one
 - `Baselines/<Name>/` — actual third-party baseline source, cloned in by `install-baseline` at setup time; gitignored, not part of this repo's history.
 - `Datasets/dataset_files/*.py` + paired `.yaml` — one class per dataset, subclassing `DatasetVSLAMLAB`. `Datasets/extra-files/dataset_template.py`/`.yaml` is the starting template for a new dataset.
 - `configs/` — experiment YAMLs (`exp_*.yaml`, referencing a `Config:` block that lists dataset:sequence pairs, `NumRuns`, `Parameters`, `Module`) and sequence-list configs (`config_*.yaml`). `test_*` files here are test experiment configs, not pytest.
-- `Capabilities/` — per-sequence preprocessing capabilities (semantic masks, generated depth, estimated intrinsics, VPR distance matrix, information-based frame selection via placecell's `rgb_placecell: <n>`), one script + pixi environment each, writing artifacts next to the sequence data that `Run/run_functions.py` wires into an experiment via `Parameters:` keys. `Capabilities/README.md` is the contract they follow.
+- `Capabilities/` — per-sequence preprocessing capabilities (semantic masks, generated depth, estimated intrinsics, VPR distance matrix, information-based frame selection via placecell's `rgb_placecell: <n>`), each split into its own repository (model code + its own pixi environment, cloned to `Capabilities/sources/<name>/`, gitignored) and a driver `Capabilities/<name>.py` (built on a `CapabilityVSLAMLAB` instance) run from the `vslamlab` env, writing artifacts next to the sequence data that `Run/run_functions.py` wires into an experiment via `Parameters:` keys. `Capabilities/README.md` is the contract they follow.
 - `Run/` — pipeline execution logic.
 - `Evaluate/` — metrics and evaluation logic.
 - `vslamlab_gui.py`, `vslamlab_utilities.py`, `utilities.py`, `path_constants.py` — CLI entry point and shared utilities at the repo root.
