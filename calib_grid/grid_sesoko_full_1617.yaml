@@ -1,0 +1,16 @@
+# Fine k1 search for 2016 and 2017, which behaved almost identically in the coarse grid (grid_sesoko_full.yaml):
+# both cross from bowl to dome between k1 -0.15 (+7.2 / +7.8 %) and -0.10 (-11.9 / -11.7 %), flat at about -0.130.
+# rgb_step 2: at step 3, 2016 (2132 frames, the sparsest year) loses overlap and splits into sub-models
+# (~614/711 registered); at step 2 it registered 1060/1066 in one model. One grid has one rgb_step, so 2017 runs
+# at step 2 too.
+name: sesoko_full_1617
+dataset: sesoko
+sequences: [ssk16-full, ssk17-full]
+principal_point: [304.0, 252.5]
+
+focal_length: [565]
+k1: [-0.135, -0.130, -0.125]
+k2: [0.0]
+
+parameters: {verbose: 0, rgb_step: 2, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+             optimize_intrinsics: 0, random_seed: 0}

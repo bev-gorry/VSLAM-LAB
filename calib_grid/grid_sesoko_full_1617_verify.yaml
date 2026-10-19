@@ -1,0 +1,13 @@
+# Verification of the 2016/2017 camera chosen from grid_sesoko_full_1617.yaml: both years cross from bowl to dome
+# between k1 -0.135 (+0.95 / +1.21 %) and -0.130 (-1.15 / -1.21 %), interpolated flat at k1 -0.1325 for both.
+name: sesoko_full_1617_verify
+dataset: sesoko
+sequences: [ssk16-full, ssk17-full]
+principal_point: [304.0, 252.5]
+
+focal_length: [565]
+k1: [-0.1325]
+k2: [0.0]
+
+parameters: {verbose: 0, rgb_step: 2, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+             optimize_intrinsics: 0, random_seed: 0}

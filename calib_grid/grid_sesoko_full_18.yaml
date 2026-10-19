@@ -1,0 +1,14 @@
+# Fine k1 search for 2018, which needs a different camera from 2016/2017 in the coarse grid (grid_sesoko_full.yaml):
+# it crosses from bowl to dome between k1 -0.05 (+8.7 %) and 0.0 (-9.0 %), flat at about -0.025.
+# rgb_step 3 as in the coarse grid (955/959 registered in one model); check the chosen camera once at rgb_step 2.
+name: sesoko_full_18
+dataset: sesoko
+sequences: [ssk18-full]
+principal_point: [304.0, 252.5]
+
+focal_length: [565]
+k1: [-0.040, -0.030, -0.025, -0.020, -0.010]
+k2: [0.0]
+
+parameters: {verbose: 0, rgb_step: 3, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+             optimize_intrinsics: 0, random_seed: 0}

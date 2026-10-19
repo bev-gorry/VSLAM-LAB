@@ -47,13 +47,16 @@ class COLMAP_baseline(BaselineVSLAMLAB):
         #     and <sequence>/rgb.csv; relative paths are inside the sequence folder)
         #   vpr_threshold: kept if min-max-normalised distance <= threshold; lg_min_matches: hybrid matches kept if > this;
         #   min_matches: pair dropped below this; verification: 'colmap' | 'glomap' (GLOMAP 1.2.0-like) | 'none' (original pipeline)
-        # single_camera_per_folder: 1 (upstream) -> one camera per session folder; 0 -> one shared camera (original hybrid pipeline)
+        # single_camera_per_folder: 1 (upstream) -> one camera per image folder; 0 -> one shared camera (original hybrid
+        #   pipeline). COLMAP does not follow symlinks, so a combined multi-session sequence gets one camera either way.
+        # per_session_calibration: 1 -> one camera per session of a combined sequence, each with its own session
+        #   sequence's calibration.yaml (needs a known calibration.yaml in every session and in the combined sequence)
         # random_seed: -1 (COLMAP default) or >= 0 for repeatable verification + mapping
         default_parameters = {'verbose': 1, 'mode': 'mono', 'matcher_type': 'exhaustive',
                              'matching_type': 'sift_bruteforce', 'mapper_type': 'colmap', 'rgb_max': 50000000,
                              'use_mask': 0, 'optimize_intrinsics': 1, 'camera_model': '',
                              'dense': 0, 'dense_max_image_size': 1600, 'mesher': 'none',
-                             'single_camera_per_folder': 1, 'random_seed': -1,
+                             'single_camera_per_folder': 1, 'per_session_calibration': 0, 'random_seed': -1,
                              'hybrid_features': 'superpoint', 'hybrid_matching': 'lightglue',
                              'pair_selection': 'vpr', 'vpr_matrix': '', 'vpr_rgb_csv': '', 'vpr_threshold': 0.5,
                              'lg_min_matches': 40, 'min_matches': 10, 'verification': 'colmap'}

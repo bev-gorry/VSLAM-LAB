@@ -1,0 +1,17 @@
+# Brute-force search for fixed camera intrinsics that give a flat Sesoko reconstruction.
+# Every combination of focal_length x k1 x k2 below is one experiment, run on all `sequences` with the same camera
+# (one camera assumed for all three years) and intrinsics kept fixed (optimize_intrinsics: 0).
+# Stage 1 sweeps k1 at the middle of the self-calibrated focal lengths (441 / 547 / 576 px); for stage 2, set k1 to
+# the best value and list focal lengths around 550.
+name: sesoko_half
+dataset: sesoko
+sequences: [ssk16-half, ssk17-half, ssk18-half]
+principal_point: [304.0, 252.5]
+
+focal_length: [550]
+k1: [-0.20, -0.15, -0.10, -0.05, 0.0]
+k2: [0.0]
+
+# Same settings as the per-year calibration runs, but fixed intrinsics; subsets use rgb_step 1
+parameters: {verbose: 0, rgb_step: 1, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+             optimize_intrinsics: 0, random_seed: 0}

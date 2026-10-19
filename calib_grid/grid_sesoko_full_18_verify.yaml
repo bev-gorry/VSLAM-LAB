@@ -1,0 +1,13 @@
+# Verification of the 2018 camera chosen from grid_sesoko_full_18.yaml at the full-sequence rgb_step 2 (the grid ran
+# at step 3): flat between k1 -0.030 (+1.49 %) and -0.025 (-0.44 %), interpolated flat at k1 -0.026.
+name: sesoko_full_18_verify
+dataset: sesoko
+sequences: [ssk18-full]
+principal_point: [304.0, 252.5]
+
+focal_length: [565]
+k1: [-0.026]
+k2: [0.0]
+
+parameters: {verbose: 0, rgb_step: 2, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+             optimize_intrinsics: 0, random_seed: 0}

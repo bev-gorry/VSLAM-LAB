@@ -1,0 +1,17 @@
+# Brute-force search for fixed camera intrinsics that give a flat Sesoko reconstruction, on the full sequences.
+# Every combination of focal_length x k1 x k2 below is one experiment, run on all `sequences` with the same camera
+# (one camera assumed for all three years) and intrinsics kept fixed (optimize_intrinsics: 0).
+# Stage 1 sweeps k1 at f = 565, where planarity of the self-calibrated runs crosses from bowl (2017, f 547, +4.2%)
+# to dome (2018, f 576, -2.5%); for stage 2, set k1 to the best value and list focal lengths around 565.
+# rgb_step 3 (not the usual 2) keeps the search affordable; check the chosen camera once at rgb_step 2.
+name: sesoko_full
+dataset: sesoko
+sequences: [ssk16-full, ssk17-full, ssk18-full]
+principal_point: [304.0, 252.5]
+
+focal_length: [565]
+k1: [-0.20, -0.15, -0.10, -0.05, 0.0]
+k2: [0.0]
+
+parameters: {verbose: 0, rgb_step: 3, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+             optimize_intrinsics: 0, random_seed: 0}
