@@ -13,7 +13,7 @@ url_download_root:
   eff18: "https://www.seanoe.org/data/00810/92226/data/98314.zip"
   eff20: "https://www.seanoe.org/data/00810/92226/data/98356.zip"
 
-target_resolution: [640, 480]
+# target_resolution: [640, 480] # No target_resolution: frames and intrinsics stay at the native 1920x1080
 
 sequence_names:
   - eff15
