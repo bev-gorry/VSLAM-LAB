@@ -52,6 +52,8 @@ class COLMAP_baseline(BaselineVSLAMLAB):
         # per_session_calibration: 1 -> one camera per session of a combined sequence, each with its own session
         #   sequence's calibration.yaml (needs a known calibration.yaml in every session and in the combined sequence)
         # random_seed: -1 (COLMAP default) or >= 0 for repeatable verification + mapping
+        # init_pair: 'colmap' (COLMAP chooses) or 'cross_session' (the verified cross-session pair with the most matches;
+        #   learned keypoints are matched only across sessions, so a model started inside one session can fragment)
         default_parameters = {'verbose': 1, 'mode': 'mono', 'matcher_type': 'exhaustive',
                              'matching_type': 'sift_bruteforce', 'mapper_type': 'colmap', 'rgb_max': 50000000,
                              'use_mask': 0, 'optimize_intrinsics': 1, 'camera_model': '',
@@ -59,7 +61,8 @@ class COLMAP_baseline(BaselineVSLAMLAB):
                              'single_camera_per_folder': 1, 'per_session_calibration': 0, 'random_seed': -1,
                              'hybrid_features': 'superpoint', 'hybrid_matching': 'lightglue',
                              'pair_selection': 'vpr', 'vpr_matrix': '', 'vpr_rgb_csv': '', 'vpr_threshold': 0.5,
-                             'lg_min_matches': 40, 'min_matches': 10, 'verification': 'colmap'}
+                             'lg_min_matches': 40, 'min_matches': 10, 'verification': 'colmap',
+                             'init_pair': 'colmap'}
 
         # Initialize the baseline
         super().__init__(baseline_name, baseline_folder, default_parameters)
