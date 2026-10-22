@@ -2,9 +2,9 @@
 Module: VSLAM-LAB - Datasets - dataset_lizard_island.py
 - Author: Alejandro Fontan
 - Assisted by: Claude (Fable 5.1)
-- Version: 1.1
+- Version: 1.2
 - Created: 2026-09-02
-- Updated: 2026-09-03
+- Updated: 2026-10-21
 - License: GPLv3 License
 """
 
@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Final
 
 import numpy as np
+import pandas as pd
 from PIL import Image, UnidentifiedImageError
 from tqdm import tqdm
 
@@ -33,6 +34,10 @@ print_info, print_warning = make_printers(SCRIPT_LABEL)
 # sequence's GoPro camera folder on the campaign drive (raw_data_path in the yaml).
 _RAW_LINK_NAME: Final = "raw"
 _IMAGE_SUFFIXES: Final = frozenset({".jpg", ".jpeg"})
+
+# refrax capability artifact (names as in Run/run_functions.py REFRACTION_FOLDER_BASE/REFRACTION_COMPLETE_MARKER).
+_REFRAX_FOLDER: Final = "refrax_0"
+_REFRAX_COMPLETE_MARKER: Final = ".refrax_complete"
 
 # EXIF tags (Exif IFD) read for each frame's capture timestamp.
 _EXIF_IFD: Final = 0x8769
@@ -180,7 +185,18 @@ class LizardIslandDataset(DatasetVSLAMLAB):
             for sequence_name, entries in (self.cfg.get("exclude_frames") or {}).items()
         }
 
+        # Sequences derived from already-processed ones (see the yaml's subsets/combined)
+        self.subsets: dict[str, list[str]] = self.cfg.get("subsets", {}) or {}
+        self.combined: dict[str, list[str]] = self.cfg.get("combined", {}) or {}
+
     def download_sequence_data(self, sequence_name: str) -> None:
+        if sequence_name in self.subsets:
+            self._create_subset(sequence_name)
+            return
+        if sequence_name in self.combined:
+            self._create_combined(sequence_name)
+            return
+
         raw_link = self._raw_link(sequence_name)
         if raw_link.is_symlink() or raw_link.exists():
             return
@@ -200,6 +216,8 @@ class LizardIslandDataset(DatasetVSLAMLAB):
         os.symlink(camera_dir.resolve(), raw_link)
 
     def create_rgb_folder(self, sequence_name: str) -> None:
+        if self._is_derived(sequence_name):
+            return
         rgb_path = self.rgb_path(sequence_name)
         if rgb_path.exists():
             # Already built: only apply an exclude_frames list that grew since (cheap, idempotent).
@@ -242,15 +260,20 @@ class LizardIslandDataset(DatasetVSLAMLAB):
         tmp_path.rename(rgb_path)
 
     def create_rgb_csv(self, sequence_name: str) -> None:
+        if self._is_derived(sequence_name):
+            return
         rgb_csv = self.rgb_csv_path(sequence_name)
         if rgb_csv.exists() and not self._csv_lists_excluded(sequence_name, rgb_csv):
             return
 
         rgb_path = self.rgb_path(sequence_name)
-        rows = [[ts_ns, f"{rgb_path.name}/{name}"] for ts_ns, name in self._frame_timestamps(sequence_name)]
-        write_csv_rows(rgb_csv, ["ts_rgb_0 (ns)", "path_rgb_0"], rows)
+        # sequence_name: the session of each frame once sequences are combined (the hybrid matcher's same-session test)
+        rows = [[ts_ns, f"{rgb_path.name}/{name}", sequence_name] for ts_ns, name in self._frame_timestamps(sequence_name)]
+        write_csv_rows(rgb_csv, ["ts_rgb_0 (ns)", "path_rgb_0", "sequence_name"], rows)
 
     def create_calibration_yaml(self, sequence_name: str) -> None:
+        if self._is_derived(sequence_name):
+            return
         # One shared pinhole + radtan4 calibration (see _CALIBRATION_* above). It describes the
         # 593x518 resized frames; rescale it to the size the current target_resolution actually
         # yields (a no-op at the default [640, 480]), and warn if rgb_0 disagrees with that (#99).
@@ -272,6 +295,8 @@ class LizardIslandDataset(DatasetVSLAMLAB):
         self.write_calibration_yaml(sequence_name=sequence_name, rgb=[rgb])
 
     def create_groundtruth_csv(self, sequence_name: str) -> None:
+        if self._is_derived(sequence_name):
+            return
         # Groundtruth is the Floatyboat's GPS, given per image (image_name, latitude, longitude,
         # height): local ENU positions (m, +Z up) about the first fix of the sequence. Position
         # only - orientation is written as identity. Height is 0 for every fix in every capture
@@ -304,6 +329,101 @@ class LizardIslandDataset(DatasetVSLAMLAB):
         # campaign drive (the only full-resolution copy, with no remote source to re-download
         # from), and nothing else intermediate is written.
         return
+
+    def _is_derived(self, sequence_name: str) -> bool:
+        return sequence_name in self.subsets or sequence_name in self.combined
+
+    def _create_subset(self, sequence_name: str) -> None:
+        """An inclusive frame range of the parent sequence (first and last rgb_0 frame), with the parent's calibration.
+        Frames are named rather than counted, so a rebuild selects the same frames even if a row of the parent's
+        rgb.csv shifts. (The GPS is too noisy to select by radius around an anchor, as Eiffel Tower does.)"""
+        parent, first, last = self.subsets[sequence_name]
+        self.download_sequence(parent)
+        if self.rgb_path(sequence_name).exists():
+            return
+
+        df_rgb = pd.read_csv(self.rgb_csv_path(parent))
+        df_gt = pd.read_csv(self.groundtruth_csv_path(parent))
+        rows = {path: i for i, path in enumerate(df_rgb["path_rgb_0"])}
+        for frame in (first, last):
+            if frame not in rows:
+                raise ValueError(f"{sequence_name}: {frame} is not a frame of {parent}")
+        df_subset = df_rgb.iloc[rows[first]:rows[last] + 1].copy()
+        # Older rgb.csv files have no sequence_name column; the frames' session is the parent
+        df_subset["sequence_name"] = parent
+        df_gt_subset = df_gt[df_gt["ts (ns)"].isin(df_subset["ts_rgb_0 (ns)"])]
+
+        self.sequence_path(sequence_name).mkdir(parents=True, exist_ok=True)
+        shutil.copy2(self.calibration_yaml_path(parent), self.calibration_yaml_path(sequence_name))
+        self._link_frames(parent, sequence_name, df_subset["path_rgb_0"])
+        write_csv_rows(self.rgb_csv_path(sequence_name), df_subset.columns.tolist(),
+                       df_subset.astype(object).values.tolist())
+        write_csv_rows(self.groundtruth_csv_path(sequence_name), df_gt.columns.tolist(),
+                       df_gt_subset.astype(object).values.tolist())
+        print_info(f"{sequence_name}: {len(df_subset)} frames of {parent} ({first} - {last})")
+
+    def _create_combined(self, sequence_name: str) -> None:
+        """The listed sequences concatenated in order, with the first one's calibration. Each part must already have
+        its own refrax_0/ (refrax is run per part with that survey's z0), which is linked in so that
+        'refraction: refrax' uses every part's own corrected frames and camera instead of running refrax again on the
+        combined sequence with a single z0."""
+        parts = self.combined[sequence_name]
+        for part in parts:
+            self.download_sequence(part)
+        if self.rgb_path(sequence_name).exists():
+            return
+
+        missing = [part for part in parts if not (self.sequence_path(part) / _REFRAX_FOLDER / _REFRAX_COMPLETE_MARKER).is_file()]
+        if missing:
+            raise SystemExit(
+                f"{sequence_name}: run refrax on {', '.join(missing)} first, each with its own z0 (settings in "
+                f"dataset_{self.dataset_name}.yaml), e.g.\n  pixi run refrax-inference --sequences {self.dataset_name} "
+                f"{missing[0]} --z0 <m> ...")
+
+        dfs_rgb = [pd.read_csv(self.rgb_csv_path(part)) for part in parts]
+        dfs_gt = [pd.read_csv(self.groundtruth_csv_path(part)) for part in parts]
+        df_rgb = pd.concat(dfs_rgb, ignore_index=True)
+        df_gt = pd.concat(dfs_gt, ignore_index=True)
+        # All frames share one rgb_0 folder, so a file name present in two parts would be overwritten.
+        if df_rgb["path_rgb_0"].duplicated().any():
+            raise ValueError(f"{sequence_name}: the same frame appears in more than one of {parts}")
+
+        self.sequence_path(sequence_name).mkdir(parents=True, exist_ok=True)
+        shutil.copy2(self.calibration_yaml_path(parts[0]), self.calibration_yaml_path(sequence_name))
+        for part, df_part in zip(parts, dfs_rgb):
+            self._link_frames(part, sequence_name, df_part["path_rgb_0"])
+            self._link_refrax(part, sequence_name, df_part["path_rgb_0"])
+        # What Run/run_functions.py reads of a refrax_0/ artifact (calibration_exp.yaml, the mask, the marker): the
+        # first part's. Per-session cameras come from each part's refrax_0/calibration.yaml (per_session_calibration).
+        for name in ("calibration.yaml", "mask.png", _REFRAX_COMPLETE_MARKER):
+            self._link(self.sequence_path(parts[0]) / _REFRAX_FOLDER / name,
+                       self.sequence_path(sequence_name) / _REFRAX_FOLDER / name)
+        write_csv_rows(self.rgb_csv_path(sequence_name), df_rgb.columns.tolist(),
+                       df_rgb.astype(object).values.tolist())
+        write_csv_rows(self.groundtruth_csv_path(sequence_name), df_gt.columns.tolist(),
+                       df_gt.astype(object).values.tolist())
+        print_info(f"{sequence_name}: {len(df_rgb)} frames from {', '.join(parts)} (with {_REFRAX_FOLDER}/)")
+
+    def _link_frames(self, source_sequence: str, target_sequence: str, rel_paths: pd.Series) -> None:
+        for rel_path in rel_paths:
+            self._link(self.sequence_path(source_sequence) / rel_path, self.sequence_path(target_sequence) / rel_path)
+
+    def _link_refrax(self, source_sequence: str, target_sequence: str, rel_paths: pd.Series) -> None:
+        """Link each frame's refraction-corrected image (<frame stem>.png, as run_functions.py maps rgb_0 frames)."""
+        for rel_path in rel_paths:
+            name = f"{Path(rel_path).stem}.png"
+            source = self.sequence_path(source_sequence) / _REFRAX_FOLDER / name
+            if not source.is_file():
+                raise FileNotFoundError(f"{source} missing despite {source_sequence}'s {_REFRAX_COMPLETE_MARKER}")
+            self._link(source, self.sequence_path(target_sequence) / _REFRAX_FOLDER / name)
+
+    @staticmethod
+    def _link(source: Path, target: Path) -> None:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.is_symlink() or target.exists():
+            target.unlink()
+        # Relative link: keeps working if the benchmark folder is moved or the drive is mounted elsewhere.
+        os.symlink(os.path.relpath(source, target.parent), target)
 
     def _check_calibration_resolution(self, sequence_name: str) -> None:
         """Warn if the first rgb_0 frame's size differs from what the calibration is being scaled

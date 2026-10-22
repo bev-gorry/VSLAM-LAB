@@ -20,7 +20,7 @@ raw_formats: ['images']
 # sequence's GoPro camera folder to VSLAM-LAB-Benchmark/LIZARD-ISLAND/<sequence_name>/raw; the
 # create_* hooks read through that link, so the drive must be mounted while a sequence is processed.
 sequence_location: local
-raw_data_path: /media/alejandro/Elements/Serena_Mou_Data
+raw_data_path: /media/beverley/beverley_t7/RAW-DATA/Serena_Mou_Data
 
 target_resolution: [640, 480]
 
@@ -43,6 +43,30 @@ sequence_names:
   - mar24_gp2
   - sep24_gp1
   - sep24_gp2
+  - feb24_gp1-s200
+  - mar24_gp1-s200
+  - lirall-s200
+
+# Sequences derived from already-processed ones (built by symlinking frames, no re-download).
+# subsets:  an inclusive frame range of a parent sequence, [parent, first rgb_0 frame, last rgb_0 frame], with the
+#           parent's calibration. (The GPS is too noisy to select frames by radius.)
+#   *-s200  200 frames per survey over the same stretch of reef (rows 2736-2935 / 3290-3489 of the parents' rgb.csv)
+subsets:
+  feb24_gp1-s200: [feb24_gp1, "rgb_0/G0021114.JPG", "rgb_0/G0021313.JPG"]
+  mar24_gp1-s200: [mar24_gp1, "rgb_0/G0014339.JPG", "rgb_0/G0014538.JPG"]
+
+# combined: several sequences concatenated in the listed order (one multi-session sequence), with the first listed
+#           sequence's calibration. Each part needs its own refrax_0/ first (refrax is run per survey with that
+#           survey's z0); the parts' corrected frames are linked into the combined sequence's refrax_0/, and
+#           per_session_calibration gives every survey its own corrected camera.
+#   Refrax settings (as for the full surveys): closed_form, auto zoom in [1, 2.5], fit canvas, crop, in-air
+#   intrinsics; housing n_port [0, 0, 1], mu_a 1.0, mu_g 1.0, mu_w 1.34, rflat 0.02, tglass 0.0; z0 3 m for
+#   feb24_gp1, 1.5 m for mar24_gp1:
+#     pixi run refrax-inference --sequences lizard-island feb24_gp1-s200 --z0 3 --mu-a 1.0 --mu-g 1.0 --mu-w 1.34 \
+#         --rflat 0.02 --tglass 0.0 --n-port 0 0 1 --zoom auto --zoom-bounds 1 2.5 --fit-canvas --crop
+#     (and mar24_gp1-s200 with --z0 1.5)
+combined:
+  lirall-s200: [feb24_gp1-s200, mar24_gp1-s200]
 
 # Frames to leave out of a sequence (dropped from rgb_0/, rgb.csv and groundtruth.csv), per
 # sequence: corrupted stills, launch/recovery shots, etc. Each entry is either one GoPro file name
