@@ -1,0 +1,82 @@
+#!/bin/bash
+#PBS -N eff_glomap
+#PBS -q <gpu queue>
+#PBS -P <project>
+#PBS -l select=1:ncpus=32:mem=128gb:ngpus=1
+#PBS -l walltime=24:00:00
+#PBS -j oe
+
+# Eiffel Tower full on another machine, with COLMAP's global mapper (GLOMAP), native images, matched databases reused:
+#   1. per-session maps (eff16/18/20-full)  2. Sim(3) and Sim(3) + BA on them (merged database reused, >= 100 rule)
+#   3. Ours (filtered joint database)       4. Ours reference-pose check, then its score added to posthoc/summary.yaml
+# Finished stages leave $DONE/<stage> and are skipped on a re-submit (delete a marker to redo that stage).
+# Read check_reference_poses.txt before trusting the Ours row: the job does not stop when that check fails.
+# Submit: qsub -v ROOT=<multi-session-sfm clone>,DATA=<folder holding VSLAM-LAB-Evaluation> eff_glomap.pbs
+
+set -euo pipefail
+ROOT=${ROOT:?set ROOT=<multi-session-sfm clone>}
+DATA=${DATA:?set DATA=<folder holding VSLAM-LAB-Evaluation>}
+PORT=$ROOT/baselines/VSLAM_LAB_port
+EVAL=$DATA/VSLAM-LAB-Evaluation
+OURS=$EVAL/exp_eff_full_ours_glomap/EIFFEL-TOWER/effall-full
+SURVEY=exp_eff_full_posthoc_glomap
+SESSIONS=$EVAL/$SURVEY/EIFFEL-TOWER
+DONE=$EVAL/.done_eff_glomap
+mkdir -p $DONE
+
+COLMAP="pixi run --frozen --manifest-path $PORT/pixi.toml -e colmap"
+stage() { if [ -e $DONE/$1 ]; then echo "skip $1 (done)"; return 1; fi; echo "== $1 start=$(date -Is)"; }
+fin()   { touch $DONE/$1; echo "== $1 done=$(date -Is)"; }
+
+echo "job=${PBS_JOBID:-local} host=$(hostname) start=$(date -Is) ncpus=$(nproc)"
+nvidia-smi
+
+# 1. Per-session maps with the global mapper, on the reused session databases
+cd $PORT
+if stage map_sessions; then
+  $COLMAP python Baselines/colmap/remap_colmap.py $SESSIONS/eff16-full $SESSIONS/eff18-full $SESSIONS/eff20-full \
+      --remap --mapper_type glomap
+  fin map_sessions
+fi
+
+# 2. Sim(3) and Sim(3) + BA on those maps (scored into $OURS/posthoc/summary.yaml)
+cd $ROOT
+if stage posthoc; then
+  rm -rf $OURS/posthoc
+  $COLMAP python reviews/port_tests/posthoc_same_evidence.py $OURS --survey $SURVEY --repeat 0 --min_cross_inliers 100
+  fin posthoc
+fi
+
+# 3. Ours with the global mapper, on the filtered joint database
+cd $PORT
+if stage map_ours; then
+  $COLMAP python Baselines/colmap/remap_colmap.py $OURS --remap --mapper_type glomap
+  fin map_ours
+fi
+
+# 4. Ours: two-copy test against the reference poses, then its row in posthoc/summary.yaml
+cd $ROOT
+if stage score_ours; then
+  $COLMAP python reviews/port_tests/check_reference_poses.py $OURS | tee $OURS/check_reference_poses.txt
+  $COLMAP python - $OURS <<'EOF'
+import sys
+from pathlib import Path
+
+import yaml
+
+sys.path.insert(0, "reviews/port_tests")
+from posthoc_same_evidence import ROOT, evaluate
+
+run = Path(sys.argv[1])
+summary_file = run / "posthoc" / "summary.yaml"
+csvs = sorted((ROOT / "reprojection" / "EIFFEL-TOWER" / "effall-full").glob("evaluation_points_*.csv"))
+summary = yaml.safe_load(summary_file.read_text())
+summary["rows"]["ours"] = evaluate(run / "colmap_00000", csvs)
+summary_file.write_text(yaml.safe_dump(summary, sort_keys=False))
+for key, row in summary["rows"].items():
+    print(key, row["rpe_median_px"], f"{row['n_scored']}/{row['n_clicks']}")
+EOF
+  fin score_ours
+fi
+
+echo "finished=$(date -Is)"
