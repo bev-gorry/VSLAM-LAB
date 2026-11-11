@@ -1,0 +1,12 @@
+# Per-session reconstructions for the post-hoc baselines (Table II: Sim(3), Sim(3) + BA, ICP, BUFFER-X): each session
+# of ssk-s01...s05 alone, with its own database, exactly as Ours reconstructs within a session (exhaustive SIFT, COLMAP incremental
+# mapper, the session's fixed camera from its calibration.yaml, seed 0). NumRuns 3 -> colmap_00000..00002 = the three
+# repeats of the post-hoc baselines (report the median repeat by Sim(3) + BA). Cross-session matching is done
+# afterwards by posthoc/posthoc_same_evidence.py --survey exp_x5x6_ssk_subsets_posthoc.
+
+exp_x5x6_ssk_subsets_posthoc:
+  Config: config_ssk_subsets_sessions.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+               optimize_intrinsics: 0, random_seed: 2}
+  Module: colmap

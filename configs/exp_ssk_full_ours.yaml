@@ -1,0 +1,19 @@
+# Joint multi-session reconstruction of the full Sesoko dataset (sskall-full = ssk16/17/18-full) with the hybrid
+# matcher and the flat-reconstruction cameras from calib_grid, one per session and kept fixed:
+#   2016/2017: OPENCV f 565, k1 -0.1325   2018: OPENCV f 565, k1 -0.026   (each ssk1X-full/calibration.yaml)
+# vpr_threshold 0.5 is the original full-Sesoko setting (arguments/exp_ssk_full_ours.yaml, dist_threshold);
+# Every 2nd frame within each session, as in the paper: rgb_step2.csv (aqua_scripts/write_frame_lists.py), not
+# rgb_step 2, which VSLAM-LAB applies to the combined list and would shift 2018's frames by one.
+# init_pair cross_session: the mapper starts from the cross-session pair with the most verified matches (with enough
+# parallax for COLMAP: median triangulation angle >= 20 deg). Learned
+# keypoints are matched only across sessions, so a start inside one session can fragment (s04); on the subsets this
+# start gives the same results as COLMAP's own when that one works (remap tests, 21 Oct).
+exp_ssk_full_ours:
+  Config: config_ssk_full_joint.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.5,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap

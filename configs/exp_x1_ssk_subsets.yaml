@@ -1,0 +1,24 @@
+# Table II rows ssk-s01..s04 (the original paper's subsets, recreated in dataset_sesoko.yaml), final pipeline:
+# per-session flat cameras kept fixed (each ssk1X/calibration.yaml), COLMAP verification + incremental mapper, seed 0.
+# ours: same parameters as exp_a1_s05_superpoint_lightglue (the s05 row), VPR threshold 0.55 on every subset.
+# colmap: the "COLMAP" column, exhaustive SIFT over all pairs with the same cameras (no cross-session learned matches).
+# init_pair cross_session (22 Oct, clean reruns): the mapper starts from the cross-session pair with the most verified
+# matches and a median triangulation angle >= 20 deg. Learned keypoints are matched only across sessions, so a start
+# inside one session can fragment (s04).
+exp_x1_ssk_subsets_ours:
+  Config: config_ssk_subsets_joint.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 2,
+               hybrid_features: superpoint, hybrid_matching: lightglue,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_x1_ssk_subsets_colmap:
+  Config: config_ssk_subsets_joint.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 2}
+  Module: colmap

@@ -1,0 +1,11 @@
+# The "COLMAP" column on full Sesoko, as exp_x1_ssk_subsets_colmap on the subsets: one joint reconstruction of all
+# sessions (sskall-full) with exhaustive SIFT over all pairs and nothing learned. Frames, cameras and intrinsics as the
+# joint Ours run (exp_ssk_full_joint.yaml), so the two differ only in the cross-session matching: every 2nd frame per
+# session (rgb_step2.csv), fixed per-session cameras. COLMAP's own initial pair (init_pair default), as every baseline.
+# Run on Aqua: aqua_scripts/colmap_full.pbs (array index 0).
+exp_ssk_full_colmap:
+  Config: config_ssk_full_joint.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: exhaustive, matching_type: sift_bruteforce,
+               mapper_type: colmap, per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0}
+  Module: colmap

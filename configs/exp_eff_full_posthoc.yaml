@@ -1,0 +1,12 @@
+# Per-session reconstructions for the full-dataset post-hoc baselines (as exp_x5x6_ssk_subsets_posthoc.yaml): each session
+# alone with its own database, within-session settings as in that dataset's joint run, exactly the joint run's frames
+# (rgb_step2.csv in each session folder, aqua_scripts/write_frame_lists.py). NumRuns 3 = the three repeats.
+#   Sesoko:       fixed per-session cameras (each ssk1X-full/calibration.yaml), as exp_ssk_full_joint
+#   Eiffel Tower: each session's own calibration, focal length and distortion refined, as exp_eff_full_joint
+
+exp_eff_full_posthoc:
+  Config: config_eff_full_sessions.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: exhaustive, matching_type: sift_bruteforce,
+               mapper_type: colmap, optimize_intrinsics: 1, random_seed: 0}
+  Module: colmap
