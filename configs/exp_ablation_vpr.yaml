@@ -1,15 +1,13 @@
-# Ablation A2 (Table IV): VPR threshold, all else exp_a1_s05_superpoint_lightglue (whose threshold, 0.55, is the
-# paper's and is not repeated here). The threshold is on MegaLoc distances min-max normalised over the whole matrix,
-# self and same-session pairs excluded; a cross-session pair is matched if its distance <= threshold, so 1.00 keeps
-# every cross-session pair (no VPR selection).
-# Thresholds (22 Oct): 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.80, 1.00. Table IV runs on Aqua from
-# configs/exp_a2_s05_aqua.yaml (same experiments); this file is the record and a PC fallback.
-# init_pair cross_session (22 Oct, clean reruns): the mapper starts from the cross-session pair with the most verified
-# matches and a median triangulation angle >= 20 deg. Learned keypoints are matched only across sessions, so a start
-# inside one session can fragment (s04).
+# Ablation of the VPR threshold on sskall-s05: everything as Ours (configs/exp_sesoko_subsets.yaml,
+# exp_sesoko-subsets_ours) except the threshold that selects the cross-session pairs for learned matching.
+#   pixi run vslamlab configs/exp_ablation_vpr.yaml        (from the VSLAM-LAB root)
+# The threshold is on MegaLoc distances min-max normalised over the whole matrix, self and same-session pairs excluded;
+# a cross-session pair is matched if its distance <= threshold, so 1.00 keeps every cross-session pair (no VPR
+# selection). 0.55 is Ours itself (exp_sesoko-subsets_ours on sskall-s05): not repeated.
+# exp_ablation-vpr_all-pairs: learned matching on every image pair, same-session pairs included (pair_selection: all).
 
-exp_a2_s05_vpr040:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_040:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -19,8 +17,8 @@ exp_a2_s05_vpr040:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr045:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_045:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -30,8 +28,8 @@ exp_a2_s05_vpr045:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr050:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_050:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -41,19 +39,8 @@ exp_a2_s05_vpr050:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr055:
-  Config: config_ssk05_joint.yaml
-  NumRuns: 1
-  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
-               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
-               hybrid_features: superpoint, hybrid_matching: lightglue,
-               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
-               lg_min_matches: 40, min_matches: 10, verification: colmap,
-               init_pair: cross_session}
-  Module: colmap
-
-exp_a2_s05_vpr060:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_060:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -63,8 +50,8 @@ exp_a2_s05_vpr060:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr065:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_065:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -74,8 +61,8 @@ exp_a2_s05_vpr065:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr070:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_070:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -85,8 +72,8 @@ exp_a2_s05_vpr070:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr080:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_080:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
@@ -96,13 +83,24 @@ exp_a2_s05_vpr080:
                init_pair: cross_session}
   Module: colmap
 
-exp_a2_s05_vpr100:
-  Config: config_ssk05_joint.yaml
+exp_ablation-vpr_100:
+  Config: config_sesoko_s05.yaml
   NumRuns: 1
   Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
                per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
                hybrid_features: superpoint, hybrid_matching: lightglue,
                pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 1.00,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_ablation-vpr_all-pairs:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: superpoint, hybrid_matching: lightglue,
+               pair_selection: all,
                lg_min_matches: 40, min_matches: 10, verification: colmap,
                init_pair: cross_session}
   Module: colmap

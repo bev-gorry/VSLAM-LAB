@@ -1,0 +1,40 @@
+# Full Sesoko (sskall-full = ssk16/17/18-full): Ours, COLMAP and the per-session runs for the post-hoc baselines.
+#   pixi run vslamlab configs/exp_sesoko_full.yaml        (from the VSLAM-LAB root; runs all three experiments)
+# Experiment names: multi-session-sfm/experiments.py. Every run: every 2nd frame within each session (rgb_step2.csv,
+# scripts/write_frame_lists.py; not rgb_step 2, which VSLAM-LAB applies to the combined list and would shift 2018's
+# frames by one), the flat-reconstruction cameras from calib_grid, one per session and kept fixed
+# (2016/2017: OPENCV f 565, k1 -0.1325; 2018: OPENCV f 565, k1 -0.026; each ssk1X-full/calibration.yaml), seed 0.
+#
+# exp_sesoko-full_ours      Ours: VPR threshold 0.5 (the original full-Sesoko setting), SuperPoint + LightGlue, the
+#                           mapper starting from the cross-session pair with the most verified matches (init_pair
+#                           cross_session). Then Baselines/colmap/filter_cross_session_pairs.py (--min_inliers 100)
+#                           drops its cross-session pairs with < 100 verified inliers and remap_colmap.py --remap maps
+#                           again -> exp_sesoko-full_ours-filtered, the reported run.
+# exp_sesoko-full_colmap    COLMAP: exhaustive SIFT over all pairs, nothing learned, COLMAP's own initial pair; frames
+#                           and cameras as Ours, so the two differ only in the cross-session matching.
+# exp_sesoko-full_sessions  each session alone with its own database, Ours' within-session settings and frames
+#                           (rgb_step2.csv in each session folder). NumRuns 3 = three repeats; repeat 0 is reported.
+
+exp_sesoko-full_ours:
+  Config: config_sesoko_full.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.5,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_sesoko-full_colmap:
+  Config: config_sesoko_full.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: exhaustive, matching_type: sift_bruteforce,
+               mapper_type: colmap, per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0}
+  Module: colmap
+
+exp_sesoko-full_sessions:
+  Config: config_sesoko_full_sessions.yaml
+  NumRuns: 3
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: exhaustive, matching_type: sift_bruteforce,
+               mapper_type: colmap, optimize_intrinsics: 0, random_seed: 0}
+  Module: colmap

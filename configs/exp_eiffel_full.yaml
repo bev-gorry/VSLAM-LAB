@@ -1,0 +1,44 @@
+# Full Eiffel Tower (effall-full = eff16/18/20-full): Ours, COLMAP and the per-session runs for the post-hoc baselines.
+#   pixi run vslamlab configs/exp_eiffel_full.yaml        (from the VSLAM-LAB root; runs all three experiments)
+# Experiment names: multi-session-sfm/experiments.py. Every run: the original paper's 6,584 frames (every 2nd within
+# each session; rgb_step2.csv, written by scripts/write_frame_lists.py --frames scripts/effall-full_paper_frames.csv),
+# native 1920x1080,
+# seed 0.
+#
+# exp_eiffel-full_ours      Ours: one camera for all three sessions, starting from eff20's calibration (the original
+#                           effall-full/calibration.yaml) with focal length and distortion refined, principal point
+#                           fixed; VPR threshold 0.48; SuperPoint + LightGlue; the mapper starting from the
+#                           cross-session pair with the most verified matches (init_pair cross_session). Then
+#                           Baselines/colmap/filter_cross_session_pairs.py (--min_inliers 100) drops its cross-session
+#                           pairs with < 100 verified inliers and remap_colmap.py --remap maps again
+#                           -> exp_eiffel-full_ours-filtered, the run the post-hoc baselines use.
+# exp_eiffel-full_colmap    COLMAP: exhaustive SIFT over all pairs, nothing learned, COLMAP's own initial pair; frames
+#                           and camera as Ours, so the two differ only in the cross-session matching.
+# exp_eiffel-full_sessions  each session alone with its own database and its own calibration (focal length and
+#                           distortion refined), Ours' frames (rgb_step2.csv in each session folder). Repeat 0 is
+#                           reported.
+
+exp_eiffel-full_ours:
+  Config: config_eiffel_full.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 0, optimize_intrinsics: 1, random_seed: 0,
+               hybrid_features: superpoint, hybrid_matching: lightglue,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.48,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_eiffel-full_colmap:
+  Config: config_eiffel_full.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: exhaustive, matching_type: sift_bruteforce,
+               mapper_type: colmap, per_session_calibration: 0, optimize_intrinsics: 1, random_seed: 0}
+  Module: colmap
+
+exp_eiffel-full_sessions:
+  Config: config_eiffel_full_sessions.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, rgb_csv: rgb_step2.csv, matcher_type: exhaustive, matching_type: sift_bruteforce,
+               mapper_type: colmap, optimize_intrinsics: 1, random_seed: 0}
+  Module: colmap

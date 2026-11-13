@@ -1,0 +1,41 @@
+# Sesoko subsets sskall-s01...s05: Ours, COLMAP and the per-session runs for the post-hoc baselines.
+#   pixi run vslamlab configs/exp_sesoko_subsets.yaml        (from the VSLAM-LAB root; runs all three experiments)
+# Experiment names: multi-session-sfm/experiments.py. Every run: per-session flat cameras kept fixed (each session's
+# calibration.yaml), COLMAP verification + incremental mapper, seed 0.
+#
+# exp_sesoko-subsets_ours      Ours: VPR-selected cross-session pairs (MegaLoc distance matrix vpr-lab/D.npy, threshold
+#                              0.55) matched with SuperPoint + LightGlue on top of exhaustive SIFT. The mapper starts
+#                              from the cross-session pair with the most verified matches and a median triangulation
+#                              angle >= 20 deg (init_pair cross_session): learned keypoints are matched only across
+#                              sessions, so a start inside one session can fragment the model.
+# exp_sesoko-subsets_colmap    COLMAP: exhaustive SIFT over all pairs, nothing learned, COLMAP's own initial pair.
+# exp_sesoko-subsets_sessions  each session of each subset reconstructed alone, with its own database, as Ours
+#                              reconstructs within a session (exhaustive SIFT, COLMAP's own initial pair). NumRuns 3 =
+#                              the three repeats of the post-hoc baselines (posthoc/posthoc_same_evidence.py --repeat k
+#                              uses colmap_0000k).
+# The original s02 and s04 runs (Ours, COLMAP, per-session) used seed 1, all others seed 0.
+
+exp_sesoko-subsets_ours:
+  Config: config_sesoko_subsets.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: superpoint, hybrid_matching: lightglue,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_sesoko-subsets_colmap:
+  Config: config_sesoko_subsets.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0}
+  Module: colmap
+
+exp_sesoko-subsets_sessions:
+  Config: config_sesoko_subsets_sessions.yaml
+  NumRuns: 3
+  Parameters: {verbose: 0, matcher_type: exhaustive, matching_type: sift_bruteforce, mapper_type: colmap,
+               optimize_intrinsics: 0, random_seed: 0}
+  Module: colmap

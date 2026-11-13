@@ -10,7 +10,7 @@ frame within each session instead.
 
 Writes <combined>/<name> and <session>/<name> (rows of each folder's own rgb.csv, in its order).
 
-usage: python write_frame_lists.py <benchmark>/<DATASET>/<combined seq> <session seq folder> ... [--frames csv]
+usage (from the VSLAM-LAB root): pixi run -e vslamlab python scripts/write_frame_lists.py <benchmark>/<DATASET>/<combined seq> <session seq folder> ... [--frames csv]
            [--step 2] [--name rgb_step2.csv]
 """
 import argparse

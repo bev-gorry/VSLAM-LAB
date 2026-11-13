@@ -1,0 +1,73 @@
+# Ablation of the cross-session features and matcher on sskall-s05: everything as Ours (configs/exp_sesoko_subsets.yaml,
+# exp_sesoko-subsets_ours) except hybrid_features x hybrid_matching on the VPR-selected cross-session pairs.
+#   pixi run vslamlab configs/exp_ablation_features.yaml        (from the VSLAM-LAB root)
+# SuperPoint + LightGlue is Ours and SIFT only is COLMAP (exp_sesoko-subsets_ours / _colmap on sskall-s05): not repeated.
+# superpoint / aliked are extracted at 4 rotations (not rotation invariant), sift and orb once. orb: OpenCV, 2048
+# keypoints. bruteforce: mutual nearest neighbours (Hamming for orb; LightGlue has no ORB weights), plus Lowe's ratio
+# test (0.8) for sift.
+
+exp_ablation-features_superpoint-bruteforce:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: superpoint, hybrid_matching: bruteforce,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_ablation-features_aliked-lightglue:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: aliked, hybrid_matching: lightglue,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_ablation-features_aliked-bruteforce:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: aliked, hybrid_matching: bruteforce,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_ablation-features_sift-lightglue:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: sift, hybrid_matching: lightglue,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_ablation-features_sift-bruteforce:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: sift, hybrid_matching: bruteforce,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
+
+exp_ablation-features_orb-bruteforce:
+  Config: config_sesoko_s05.yaml
+  NumRuns: 1
+  Parameters: {verbose: 0, matcher_type: hybrid, matching_type: sift_bruteforce, mapper_type: colmap,
+               per_session_calibration: 1, optimize_intrinsics: 0, random_seed: 0,
+               hybrid_features: orb, hybrid_matching: bruteforce,
+               pair_selection: vpr, vpr_matrix: vpr-lab/D.npy, vpr_rgb_csv: rgb.csv, vpr_threshold: 0.55,
+               lg_min_matches: 40, min_matches: 10, verification: colmap,
+               init_pair: cross_session}
+  Module: colmap
