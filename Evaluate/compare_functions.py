@@ -21,6 +21,14 @@ def full_comparison(experiments, VSLAMLAB_BENCHMARK, COMPARISONS_YAML_DEFAULT, c
         comparisons = yaml.safe_load(file)
 
     dataset_sequences, dataset_nicknames, dataset_rgbHz, exp_names, sequence_nicknames = get_experiments(experiments)
+
+    # The comparison only covers sequences shared by every experiment in the file. Experiments that run on
+    # different sequences (e.g. joint runs on sskall-* next to per-session runs on ssk16-*) share none, and
+    # the plots below would fail on an empty grid, so skip the comparison instead.
+    if not any(dataset_sequences.values()):
+        print(f"{SCRIPT_LABEL}No sequence is common to all experiments, comparison skipped.")
+        return
+
     accuracies = get_accuracies(experiments, dataset_sequences)
     
     # Comparisons switch
